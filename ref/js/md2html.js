@@ -17,7 +17,7 @@ function escape(str) {
 var renderer = new marked.Renderer();
 
 renderer.code = function(code, lang) {
-  if (lang) return marked.Renderer.prototype.code(code, lang);
+  if (lang) return marked.Renderer.prototype.code.call(this, code, lang);
   // console.log("code='" + code + "'")
   var lines = code.split("\n");
   var n = lines.length, i;
@@ -58,6 +58,12 @@ renderer.code = function(code, lang) {
     res += escape(lines[i].substr(2));
   }
   return '<div class="' + outer + '">' + res + '</pre></div>';
+};
+
+renderer.link = function(href, title, text) {
+  if (/^[^\/.]*(?:#|$)/.test(href))
+    href = href + ".html";
+  return marked.Renderer.prototype.link.call(this, href, title, text)
 };
 
 var opts = {
