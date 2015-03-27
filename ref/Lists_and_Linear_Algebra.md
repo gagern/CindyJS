@@ -105,7 +105,7 @@ By using negative numbers as indices one can access the list entries from the en
 The following examples exemplify this possibility:
 
     > [2 ,5 ,7 ,3]_(-1)
-    < 7
+    < 3
     > take([2 ,5 ,7 ,3],(-3))
     < 5
     > [ [2,6] ,5 ,7 ,3]_(-4)_(-1)
