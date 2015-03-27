@@ -45,9 +45,7 @@ Furthermore, the segments appear in front of the points, since their drawing ope
     > draw([C,D]);draw([D,A]);
     > draw([C,E]);draw([B,E]);
 
-| ![Image](img/HouseX.png) |
-| ------------------------ |
-| ****                     |
+![Drawing of a house](img/HouseX.png)
 
 **Drawing a line:**
 Homogeneous coordinates can also be used to represent lines.
@@ -105,7 +103,7 @@ The following piece of code illustrates the effect of the dashing modifiers.
     > draw((13,0),(13,6),dashpattern->[0,4,2,4]);
     > draw((14,0),(14,6),dashpattern->[4,2,1,2]);
 
-| ![Image](img/Dashing.png) |
+![Example of different dashing types](img/Dashing.png)
 | ------------------------- |
 | ****                      |
 
@@ -151,9 +149,7 @@ In the final two lines the `draw` operator is used to draw these lists of object
     > drawall(segs,alpha->0.9);
     > drawall(pts,size->4);
 
-| ![Image](img/CompleteGraphX.png) |
-| -------------------------------- |
-| ****                             |
+![Complete graph](img/CompleteGraphX.png)
 
 **Modifiers:**
 This operator can handle the same modifiers as the `draw(‹expr›)` operator.
@@ -175,9 +171,7 @@ Finally, the `connect` operator connects these points in the given sequential or
     > sortpts=sort(pts,#.x);
     > connect(sortpts);
 
-| ![Image](img/ConnectTheDotsX.png) |
-| --------------------------------- |
-| ****                              |
+![Points connected from left to right](img/ConnectTheDotsX.png)
 
 **Modifiers:**
 This operator can handle the same modifiers as the `draw(‹expr›)` operator.
@@ -215,9 +209,7 @@ In each iteration step of the `repeat` loop the square is drawn, and after this 
     >   scale(0.95);
     > )
 
-| ![Image](img/DrawPolyX.png) |
-| --------------------------- |
-| ****                        |
+![A filled polygon](img/DrawPolyX.png)
 
 **Modifiers:**
 This operator can handle the following modifiers:
@@ -263,6 +255,4 @@ The following piece of code shows a combined usage of the `drawcircle` and the `
     >  translate((1.5,0));rotate(26°);scale(.95);
     > );
 
-| ![Image](img/FillCircleX.png) |
-| ----------------------------- |
-| ****                          |
+![A filled and stroked circle](img/FillCircleX.png)

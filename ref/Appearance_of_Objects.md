@@ -48,9 +48,7 @@ The following code produces the picture below:
     >   drawtext((#,1),#);
     > )
 
-| ![Image](img/SizesX.png) |
-| ------------------------ |
-| ****                     |
+![Text drawn at different sizes](img/SizesX.png)
 
 ------
 
@@ -101,9 +99,7 @@ The following code produces the picture below:
     >   )
     > )
 
-| ![Image](img/ColorsX.png) |
-| ------------------------- |
-| ****                      |
+![Points drawn in different colors](img/ColorsX.png)
 
 ------
 
@@ -174,6 +170,4 @@ The following code produces the picture below:
     >   draw((0,0),(sin(#*2*pi),cos(#*2*pi)))
     > )
 
-| ![Image](img/HueX.png) |
-| ---------------------- |
-| ****                   |
+![Points drawn with different hues](img/HueX.png)
