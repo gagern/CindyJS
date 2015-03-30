@@ -1,28 +1,28 @@
-var Render2D = {};
+var Rendering = {};
 
-Render2D.handleModifs = function(modifs, handlers) {
+Rendering.handleModifs = function(modifs, handlers) {
 
     // Reset stuff first
-    if (Render2D.dashing)
-        Render2D.unSetDash();
-    Render2D.colorraw = null;
-    Render2D.size = null;
-    if (Render2D.psize < 0) Render2D.psize = 0;
-    if (Render2D.lsize < 0) Render2D.lsize = 0;
-    Render2D.overhang = 1; //TODO Eventuell dfault setzen
-    Render2D.dashing = false;
-    Render2D.isArrow = false;
-    Render2D.arrowSides = '==>';
-    Render2D.arrowposition = 1.0; // position arrowhead along the line
-    Render2D.headlen = 10; // arrow head length - perhaps set this relative to canvas size
-    Render2D.arrowShape = 'default';
-    Render2D.alpha = csport.drawingstate.alpha;
-    Render2D.bold = "";
-    Render2D.italics = "";
-    Render2D.family = "Arial";
-    Render2D.align = 0;
-    Render2D.xOffset = 0;
-    Render2D.yOffset = 0;
+    if (Rendering.dashing)
+        Rendering.unSetDash();
+    Rendering.colorraw = null;
+    Rendering.size = null;
+    if (Rendering.psize < 0) Rendering.psize = 0;
+    if (Rendering.lsize < 0) Rendering.lsize = 0;
+    Rendering.overhang = 1; //TODO Eventuell dfault setzen
+    Rendering.dashing = false;
+    Rendering.isArrow = false;
+    Rendering.arrowSides = '==>';
+    Rendering.arrowposition = 1.0; // position arrowhead along the line
+    Rendering.headlen = 10; // arrow head length - perhaps set this relative to canvas size
+    Rendering.arrowShape = 'default';
+    Rendering.alpha = csport.drawingstate.alpha;
+    Rendering.bold = "";
+    Rendering.italics = "";
+    Rendering.family = "Arial";
+    Rendering.align = 0;
+    Rendering.xOffset = 0;
+    Rendering.yOffset = 0;
 
     // Process handlers
     var key, handler;
@@ -33,57 +33,57 @@ Render2D.handleModifs = function(modifs, handlers) {
             continue;
         }
         if (handler === true) {
-            handler = Render2D.modifHandlers[key];
+            handler = Rendering.modifHandlers[key];
         }
         handler(evaluate(modifs[key]));
     }
 
     // Post-process settings
-    if (Render2D.size !== null) {
-        Render2D.psize = Render2D.lsize = Render2D.size;
+    if (Rendering.size !== null) {
+        Rendering.psize = Rendering.lsize = Rendering.size;
     } else {
-        Render2D.psize = csport.drawingstate.pointsize;
-        Render2D.lsize = csport.drawingstate.linesize;
+        Rendering.psize = csport.drawingstate.pointsize;
+        Rendering.lsize = csport.drawingstate.linesize;
     }
-    if (Render2D.colorraw !== null) {
-        Render2D.pointColor = Render2D.lineColor = Render2D.textColor =
-            Render2D.makeColor(Render2D.colorraw);
-    } else if (Render2D.alpha === 1) {
-        Render2D.pointColor = csport.drawingstate.pointcolor;
-        Render2D.lineColor = csport.drawingstate.linecolor;
-        Render2D.textColor = csport.drawingstate.textcolor;
+    if (Rendering.colorraw !== null) {
+        Rendering.pointColor = Rendering.lineColor = Rendering.textColor =
+            Rendering.makeColor(Rendering.colorraw);
+    } else if (Rendering.alpha === 1) {
+        Rendering.pointColor = csport.drawingstate.pointcolor;
+        Rendering.lineColor = csport.drawingstate.linecolor;
+        Rendering.textColor = csport.drawingstate.textcolor;
     } else {
-        Render2D.pointColor =
-            Render2D.makeColor(csport.drawingstate.pointcolorraw);
-        Render2D.lineColor =
-            Render2D.makeColor(csport.drawingstate.linecolorraw);
-        Render2D.textColor =
-            Render2D.makeColor(csport.drawingstate.textcolorraw);
+        Rendering.pointColor =
+            Rendering.makeColor(csport.drawingstate.pointcolorraw);
+        Rendering.lineColor =
+            Rendering.makeColor(csport.drawingstate.linecolorraw);
+        Rendering.textColor =
+            Rendering.makeColor(csport.drawingstate.textcolorraw);
     }
-    if (Render2D.alpha === 1) {
-        Render2D.black = "rgb(0,0,0)";
+    if (Rendering.alpha === 1) {
+        Rendering.black = "rgb(0,0,0)";
     } else {
-        Render2D.black = "rgba(0,0,0," + Render2D.alpha + ")";
+        Rendering.black = "rgba(0,0,0," + Rendering.alpha + ")";
     }
 
 };
 
-Render2D.sin30deg = 0.5;
-Render2D.cos30deg = Math.sqrt(0.75);
+Rendering.sin30deg = 0.5;
+Rendering.cos30deg = Math.sqrt(0.75);
 
-Render2D.modifHandlers = {
+Rendering.modifHandlers = {
 
     "size": function(v) {
         if (v.ctype === "number") {
-            Render2D.size = v.value.real;
-            if (Render2D.size < 0) Render2D.size = 0;
-            if (Render2D.size > 1000) Render2D.size = 1000;
+            Rendering.size = v.value.real;
+            if (Rendering.size < 0) Rendering.size = 0;
+            if (Rendering.size > 1000) Rendering.size = 1000;
         }
     },
 
     "color": function(v) {
         if (List.isNumberVector(v).value && v.value.length === 3) {
-            Render2D.colorraw = [
+            Rendering.colorraw = [
                 v.value[0].value.real,
                 v.value[1].value.real,
                 v.value[2].value.real
@@ -93,7 +93,7 @@ Render2D.modifHandlers = {
 
     "alpha": function(v) {
         if (v.ctype === "number") {
-            Render2D.alpha = v.value.real;
+            Rendering.alpha = v.value.real;
         }
     },
 
@@ -104,38 +104,38 @@ Render2D.modifHandlers = {
                 if (v.value[i].ctype === "number")
                     pat[j++] = v.value[i].value.real;
             }
-            Render2D.setDash(pat, Render2D.lsize);
-            Render2D.dashing = true;
+            Rendering.setDash(pat, Rendering.lsize);
+            Rendering.dashing = true;
         }
     },
 
     "dashtype": function(v) {
         if (v.ctype === "number") {
             var type = Math.floor(v.value.real);
-            Render2D.setDashType(type, Render2D.lsize);
-            Render2D.dashing = true;
+            Rendering.setDashType(type, Rendering.lsize);
+            Rendering.dashing = true;
         }
     },
 
     "dashing": function(v) {
         if (v.ctype === 'number') {
             var si = Math.floor(v.value.real);
-            Render2D.setDash([si * 2, si], Render2D.lsize);
-            Render2D.dashing = true;
+            Rendering.setDash([si * 2, si], Rendering.lsize);
+            Rendering.dashing = true;
         }
     },
 
     "overhang": function(v) {
         if (v.ctype === 'number') {
             // Might combine with arrowposition, see there for details
-            Render2D.overhang = Render2D.overhang * v.value.real +
-                (1 - Render2D.overhang) * (1 - v.value.real);
+            Rendering.overhang = Rendering.overhang * v.value.real +
+                (1 - Rendering.overhang) * (1 - v.value.real);
         }
     },
 
     "arrow": function(v) {
         if (v.ctype === 'boolean') {
-            Render2D.isArrow = v.value;
+            Rendering.isArrow = v.value;
         } else {
             console.error("arrow needs to be of type boolean");
         }
@@ -143,8 +143,8 @@ Render2D.modifHandlers = {
 
     "arrowshape": function(v) {
         if (v.ctype === 'string') {
-            Render2D.arrowShape = v.value;
-            Render2D.isArrow = true;
+            Rendering.arrowShape = v.value;
+            Rendering.isArrow = true;
         } else {
             console.error("arrowshape needs to be of type string");
         }
@@ -156,8 +156,8 @@ Render2D.modifHandlers = {
         } else if (!(v.value === '==>' || v.value === '<==>' || v.value === '<==')) {
             console.error("arrowsides is unknows");
         } else {
-            Render2D.arrowSides = v.value;
-            Render2D.isArrow = true;
+            Rendering.arrowSides = v.value;
+            Rendering.isArrow = true;
         }
     },
 
@@ -170,11 +170,11 @@ Render2D.modifHandlers = {
             // Combine position into overhang to simplify things
             // Writing a for overhang and b for arrowposition, we have
             // q1 = b*(a*p1 + (1-a)*p2) + (1-b)*(a*p2 + (1-a)*p1)
-            Render2D.overhang = Render2D.overhang * v.value.real +
-                (1 - Render2D.overhang) * (1 - v.value.real);
+            Rendering.overhang = Rendering.overhang * v.value.real +
+                (1 - Rendering.overhang) * (1 - v.value.real);
         } else {
-            Render2D.arrowposition = v.value.real;
-            Render2D.isArrow = true;
+            Rendering.arrowposition = v.value.real;
+            Rendering.isArrow = true;
         }
     },
 
@@ -184,23 +184,23 @@ Render2D.modifHandlers = {
         } else if (v.value.real < 0.0) {
             console.error("arrowsize has to be positive");
         } else {
-            Render2D.headlen = Render2D.headlen * v.value.real;
+            Rendering.headlen = Rendering.headlen * v.value.real;
         }
     },
 
     "bold": function(v) {
         if (v.ctype === "boolean" && v.value)
-            Render2D.bold = "bold ";
+            Rendering.bold = "bold ";
     },
 
     "italics": function(v) {
         if (v.ctype === "boolean" && v.value)
-            Render2D.italics = "italic ";
+            Rendering.italics = "italic ";
     },
 
     "family": function(v) {
         if (v.ctype === "string") {
-            Render2D.family = v.value;
+            Rendering.family = v.value;
         }
     },
 
@@ -208,35 +208,35 @@ Render2D.modifHandlers = {
         if (v.ctype === "string") {
             var s = v.value;
             if (s === "left")
-                Render2D.align = 0;
+                Rendering.align = 0;
             if (s === "right")
-                Render2D.align = 1;
+                Rendering.align = 1;
             if (s === "mid")
-                Render2D.align = 0.5;
+                Rendering.align = 0.5;
         }
     },
 
     "x_offset": function(v) {
         if (v.ctype === "number")
-            Render2D.xOffset = v.value.real;
+            Rendering.xOffset = v.value.real;
     },
 
     "y_offset": function(v) {
         if (v.ctype === "number")
-            Render2D.yOffset = v.value.real;
+            Rendering.yOffset = v.value.real;
     },
 
     "offset": function(v) {
         if (v.ctype === "list" && v.value.length === 2 &&
             v.value[0].ctype === "number" && v.value[1].ctype === "number") {
-            Render2D.xOffset = v.value[0].value.real;
-            Render2D.yOffset = v.value[1].value.real;
+            Rendering.xOffset = v.value[0].value.real;
+            Rendering.yOffset = v.value[1].value.real;
         }
     },
 
 };
 
-Render2D.lineModifs = {
+Rendering.lineModifs = {
     "size": true,
     "color": true,
     "alpha": true,
@@ -251,17 +251,17 @@ Render2D.lineModifs = {
     "arrowsize": true,
 };
 
-Render2D.pointModifs = {
+Rendering.pointModifs = {
     "size": true,
     "color": true,
     "alpha": true,
 };
 
-Render2D.pointAndLineModifs = Render2D.lineModifs;
+Rendering.pointAndLineModifs = Rendering.lineModifs;
 
-Render2D.conicModifs = Render2D.pointModifs;
+Rendering.conicModifs = Rendering.pointModifs;
 
-Render2D.textModifs = {
+Rendering.textModifs = {
     "size": true,
     "color": true,
     "alpha": true,
@@ -275,33 +275,33 @@ Render2D.textModifs = {
 };
 
 
-Render2D.makeColor = function(colorraw) {
-    var alpha = Render2D.alpha;
+Rendering.makeColor = function(colorraw) {
+    var alpha = Rendering.alpha;
     var r = Math.floor(colorraw[0] * 255);
     var g = Math.floor(colorraw[1] * 255);
     var b = Math.floor(colorraw[2] * 255);
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
 };
 
-Render2D.drawsegcore = function(pt1, pt2) {
+Rendering.drawsegcore = function(pt1, pt2) {
     var m = csport.drawingstate.matrix;
     var endpoint1x = pt1.x * m.a - pt1.y * m.b + m.tx;
     var endpoint1y = pt1.x * m.c - pt1.y * m.d - m.ty;
     var endpoint2x = pt2.x * m.a - pt2.y * m.b + m.tx;
     var endpoint2y = pt2.x * m.c - pt2.y * m.d - m.ty;
-    var overhang1 = Render2D.overhang;
+    var overhang1 = Rendering.overhang;
     var overhang2 = 1 - overhang1;
     var overhang1x = overhang1 * endpoint1x + overhang2 * endpoint2x;
     var overhang1y = overhang1 * endpoint1y + overhang2 * endpoint2y;
     var overhang2x = overhang1 * endpoint2x + overhang2 * endpoint1x;
     var overhang2y = overhang1 * endpoint2y + overhang2 * endpoint1y;
 
-    csctx.lineWidth = Render2D.lsize;
+    csctx.lineWidth = Rendering.lsize;
     csctx.lineCap = 'round';
     csctx.lineJoin = 'miter';
-    csctx.strokeStyle = Render2D.lineColor;
+    csctx.strokeStyle = Rendering.lineColor;
 
-    if (!Render2D.isArrow ||
+    if (!Rendering.isArrow ||
         (endpoint1x === endpoint1y && endpoint2x === endpoint2y)) {
         // Fast path if we have no arrowheads
         csctx.beginPath();
@@ -316,32 +316,32 @@ Render2D.drawsegcore = function(pt1, pt2) {
     var norm = Math.sqrt(dx * dx + dy * dy);
     var cosAngle = dx / norm;
     var sinAngle = dy / norm;
-    var pos_fac1 = Render2D.arrowposition;
+    var pos_fac1 = Rendering.arrowposition;
     var pos_fac2 = 1 - pos_fac1;
     var tip1x = pos_fac1 * overhang1x + pos_fac2 * overhang2x;
     var tip1y = pos_fac1 * overhang1y + pos_fac2 * overhang2y;
     var tip2x = pos_fac1 * overhang2x + pos_fac2 * overhang1x;
     var tip2y = pos_fac1 * overhang2y + pos_fac2 * overhang1y;
-    var headlen = Render2D.headlen;
-    var sin30 = Render2D.sin30deg;
-    var cos30 = Render2D.cos30deg;
+    var headlen = Rendering.headlen;
+    var sin30 = Rendering.sin30deg;
+    var cos30 = Rendering.cos30deg;
     var x30sub = headlen * (cosAngle * cos30 + sinAngle * sin30);
     var x30add = headlen * (cosAngle * cos30 - sinAngle * sin30);
     var y30sub = headlen * (sinAngle * cos30 - cosAngle * sin30);
     var y30add = headlen * (sinAngle * cos30 + cosAngle * sin30);
-    var arrowSides = Render2D.arrowSides;
+    var arrowSides = Rendering.arrowSides;
 
     csctx.beginPath();
 
     // draw line in parts for full arrow
-    if (Render2D.arrowShape === "full") {
+    if (Rendering.arrowShape === "full") {
         var rx, ry, lx, ly;
         if (arrowSides === "<==>" || arrowSides === "<==") {
             rx = tip1x + x30sub;
             ry = tip1y + y30sub;
             lx = tip1x + x30add;
             ly = tip1y + y30add;
-            if (Render2D.arrowposition < 1.0) {
+            if (Rendering.arrowposition < 1.0) {
                 csctx.moveTo(overhang1x, overhang1y);
                 csctx.lineTo(tip1x, tip1y);
             }
@@ -355,7 +355,7 @@ Render2D.drawsegcore = function(pt1, pt2) {
             lx = tip2x - x30add;
             ly = tip2y - y30add;
             csctx.lineTo((rx + lx) / 2, (ry + ly) / 2);
-            if (Render2D.arrowposition < 1.0) {
+            if (Rendering.arrowposition < 1.0) {
                 csctx.moveTo(tip2x, tip2y);
                 csctx.lineTo(overhang2x, overhang2y);
             }
@@ -382,19 +382,19 @@ Render2D.drawsegcore = function(pt1, pt2) {
         var ry = tipy - sign * y30sub;
 
         csctx.beginPath();
-        if (Render2D.arrowShape === "full") {
-            csctx.lineWidth = Render2D.lsize / 2;
+        if (Rendering.arrowShape === "full") {
+            csctx.lineWidth = Rendering.lsize / 2;
         }
         var lx = tipx - sign * x30add;
         var ly = tipy - sign * y30add;
         csctx.moveTo(rx, ry);
         csctx.lineTo(tipx, tipy);
         csctx.lineTo(lx, ly);
-        if (Render2D.arrowShape === "full") {
-            csctx.fillStyle = Render2D.lineColor;
+        if (Rendering.arrowShape === "full") {
+            csctx.fillStyle = Rendering.lineColor;
             csctx.closePath();
             csctx.fill();
-        } else if (Render2D.arrowShape !== "default") {
+        } else if (Rendering.arrowShape !== "default") {
             console.error("arrowshape is unknown");
         }
         csctx.stroke();
@@ -402,27 +402,27 @@ Render2D.drawsegcore = function(pt1, pt2) {
 
 };
 
-Render2D.drawpoint = function(pt) {
+Rendering.drawpoint = function(pt) {
     var m = csport.drawingstate.matrix;
 
     var xx = pt.x * m.a - pt.y * m.b + m.tx;
     var yy = pt.x * m.c - pt.y * m.d - m.ty;
 
-    csctx.lineWidth = Render2D.psize * 0.3;
+    csctx.lineWidth = Rendering.psize * 0.3;
     csctx.beginPath();
-    csctx.arc(xx, yy, Render2D.psize, 0, 2 * Math.PI);
-    csctx.fillStyle = Render2D.pointColor;
+    csctx.arc(xx, yy, Rendering.psize, 0, 2 * Math.PI);
+    csctx.fillStyle = Rendering.pointColor;
 
     csctx.fill();
 
     csctx.beginPath();
-    csctx.arc(xx, yy, Render2D.psize * 1.15, 0, 2 * Math.PI);
-    csctx.fillStyle = Render2D.black;
-    csctx.strokeStyle = Render2D.black;
+    csctx.arc(xx, yy, Rendering.psize * 1.15, 0, 2 * Math.PI);
+    csctx.fillStyle = Rendering.black;
+    csctx.strokeStyle = Rendering.black;
     csctx.stroke();
 };
 
-Render2D.drawline = function(homog) {
+Rendering.drawline = function(homog) {
     var na = CSNumber.abs(homog.value[0]).value.real;
     var nb = CSNumber.abs(homog.value[1]).value.real;
     var nc = CSNumber.abs(homog.value[2]).value.real;
@@ -475,10 +475,10 @@ Render2D.drawline = function(homog) {
 
     };
 
-    Render2D.drawsegcore(pt1, pt2);
+    Rendering.drawsegcore(pt1, pt2);
 };
 
-Render2D.setDash = function(pattern, size) {
+Rendering.setDash = function(pattern, size) {
     var s = Math.sqrt(size);
     for (var i = 0; i < pattern.length; i++) {
         pattern[i] *= s;
@@ -488,28 +488,28 @@ Render2D.setDash = function(pattern, size) {
     csctx.mozDash = pattern; //FFX
 };
 
-Render2D.unSetDash = function() {
+Rendering.unSetDash = function() {
     csctx.webkitLineDash = []; //Safari
     csctx.setLineDash([]); //Chrome
     csctx.mozDash = []; //FFX
 };
 
-Render2D.setDashType = function(type, s) {
+Rendering.setDashType = function(type, s) {
 
     if (type === 0) {
-        Render2D.setDash([]);
+        Rendering.setDash([]);
     }
     if (type === 1) {
-        Render2D.setDash([10, 10], s);
+        Rendering.setDash([10, 10], s);
     }
     if (type === 2) {
-        Render2D.setDash([10, 4], s);
+        Rendering.setDash([10, 4], s);
     }
     if (type === 3) {
-        Render2D.setDash([1, 3], s);
+        Rendering.setDash([1, 3], s);
     }
     if (type === 4) {
-        Render2D.setDash([10, 5, 1, 5], s);
+        Rendering.setDash([10, 5, 1, 5], s);
     }
 
 };

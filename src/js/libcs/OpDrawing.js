@@ -60,8 +60,8 @@ evaluator.draw$1 = function(args, modifs) {
     if (v1.ctype === "shape") {
         eval_helper.drawshape(v1, modifs);
     } else if (v1.usage === "Line") {
-        Render2D.handleModifs(modifs, Render2D.lineModifs);
-        Render2D.drawline(v1);
+        Rendering.handleModifs(modifs, Rendering.lineModifs);
+        Rendering.drawline(v1);
     } else {
         var pt = eval_helper.extractPoint(v1);
 
@@ -75,9 +75,9 @@ evaluator.draw$1 = function(args, modifs) {
         }
 
         if (modifs !== null) {
-            Render2D.handleModifs(modifs, Render2D.pointModifs);
+            Rendering.handleModifs(modifs, Rendering.pointModifs);
         }
-        Render2D.drawpoint(pt);
+        Rendering.drawpoint(pt);
     }
     return nada;
 };
@@ -91,9 +91,9 @@ evaluator.draw$2 = function(args, modifs) {
         return nada;
     }
     if (modifs !== null) {
-        Render2D.handleModifs(modifs, Render2D.lineModifs);
+        Rendering.handleModifs(modifs, Rendering.lineModifs);
     }
-    Render2D.drawsegcore(pt1, pt2);
+    Rendering.drawsegcore(pt1, pt2);
     return nada;
 };
 
@@ -139,10 +139,10 @@ eval_helper.drawcircle = function(args, modifs, df) {
     var xx = pt.x * m.a - pt.y * m.b + m.tx;
     var yy = pt.x * m.c - pt.y * m.d - m.ty;
 
-    Render2D.handleModifs(modifs, Render2D.conicModifs);
+    Rendering.handleModifs(modifs, Rendering.conicModifs);
     var size = 4;
-    if (Render2D.size !== null)
-        size = Render2D.size;
+    if (Rendering.size !== null)
+        size = Rendering.size;
     csctx.lineWidth = size * 0.4;
 
     csctx.beginPath();
@@ -151,11 +151,11 @@ eval_helper.drawcircle = function(args, modifs, df) {
 
 
     if (df === "D") {
-        csctx.strokeStyle = Render2D.lineColor;
+        csctx.strokeStyle = Rendering.lineColor;
         csctx.stroke();
     }
     if (df === "F") {
-        csctx.fillStyle = Render2D.lineColor;
+        csctx.fillStyle = Rendering.lineColor;
         csctx.fill();
     }
     if (df === "C") {
@@ -168,10 +168,10 @@ eval_helper.drawcircle = function(args, modifs, df) {
 
 eval_helper.drawconic = function(aConic, modifs) {
 
-    Render2D.handleModifs(modifs, Render2D.conicModifs);
+    Rendering.handleModifs(modifs, Rendering.conicModifs);
     var size = 4;
-    if (Render2D.size !== null)
-        size = Render2D.size;
+    if (Rendering.size !== null)
+        size = Rendering.size;
     csctx.lineWidth = size * 0.4;
 
     var eps = 1e-16;
@@ -320,7 +320,7 @@ eval_helper.drawconic = function(aConic, modifs) {
     };
 
     var drawArray = function(x, y) {
-        csctx.strokeStyle = Render2D.lineColor;
+        csctx.strokeStyle = Rendering.lineColor;
         csctx.lineWidth = size;
 
         csctx.beginPath();
@@ -527,7 +527,7 @@ eval_helper.drawconic = function(aConic, modifs) {
 evaluator.drawall$1 = function(args, modifs) {
     var v1 = evaluate(args[0]);
     if (v1.ctype === "list") {
-        Render2D.handleModifs(modifs, Render2D.pointAndLineModifs);
+        Rendering.handleModifs(modifs, Rendering.pointAndLineModifs);
         for (var i = 0; i < v1.value.length; i++) {
             evaluator.draw$1([v1.value[i]], null);
         }
@@ -561,10 +561,10 @@ evaluator.fillpolygon$1 = function(args, modifs) {
 
 eval_helper.drawpolygon = function(args, modifs, df, cycle) {
 
-    Render2D.handleModifs(modifs, Render2D.conicModifs);
+    Rendering.handleModifs(modifs, Rendering.conicModifs);
     var size = 4;
-    if (Render2D.size !== null)
-        size = Render2D.size;
+    if (Rendering.size !== null)
+        size = Rendering.size;
     csctx.lineWidth = size * 0.4;
     csctx.mozFillRule = 'evenodd';
     csctx.lineJoin = "round";
@@ -617,11 +617,11 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
     }
 
     if (df === "D") {
-        csctx.strokeStyle = Render2D.lineColor;
+        csctx.strokeStyle = Rendering.lineColor;
         csctx.stroke();
     }
     if (df === "F") {
-        csctx.fillStyle = Render2D.lineColor;
+        csctx.fillStyle = Rendering.lineColor;
         csctx.fill();
     }
     if (df === "C") {
@@ -648,18 +648,18 @@ evaluator.drawtext$2 = function(args, modifs) {
     var yy = pt.x * m.c - pt.y * m.d - m.ty;
 
     var col = csport.drawingstate.textcolor;
-    Render2D.handleModifs(modifs, Render2D.textModifs);
+    Rendering.handleModifs(modifs, Rendering.textModifs);
     var size = csport.drawingstate.textsize;
-    if (Render2D.size !== null) size = Render2D.size;
-    csctx.fillStyle = Render2D.textColor;
+    if (Rendering.size !== null) size = Rendering.size;
+    csctx.fillStyle = Rendering.textColor;
 
-    csctx.font = Render2D.bold + Render2D.italics + Math.round(size * 10) / 10 + "px " + Render2D.family;
+    csctx.font = Rendering.bold + Rendering.italics + Math.round(size * 10) / 10 + "px " + Rendering.family;
     var txt = niceprint(v1);
     var width = csctx.measureText(txt).width;
     csctx.fillText(
         txt,
-        xx - width * Render2D.align + Render2D.xOffset,
-        yy - Render2D.yOffset);
+        xx - width * Rendering.align + Rendering.xOffset,
+        yy - Rendering.yOffset);
 
     return nada;
 
@@ -770,7 +770,7 @@ evaluator.plot$2 = function(args, modifs) {
     var col = csport.drawingstate.linecolor;
     var lsize = 1;
 
-    Render2D.handleModifs(modifs, {
+    Rendering.handleModifs(modifs, {
         "color": true,
         "alpha": true,
         "size": true,
@@ -798,8 +798,8 @@ evaluator.plot$2 = function(args, modifs) {
                 steps = v.value.real;
         },
     });
-    csctx.strokeStyle = Render2D.lineColor;
-    csctx.lineWidth = Render2D.lsize;
+    csctx.strokeStyle = Rendering.lineColor;
+    csctx.lineWidth = Rendering.lsize;
     csctx.lineCap = 'round';
     csctx.lineJoin = 'round';
 
