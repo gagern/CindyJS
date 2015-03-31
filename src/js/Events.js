@@ -301,8 +301,8 @@ function startit() {
 
 function updateCindy() {
     recalc();
-    csctx.save();
-    csctx.clearRect(0, 0, csw, csh);
+    renderer.save();
+    renderer.clear();
     if (csgridsize !== 0)
         evaluate(csgridscript);
     //   console.log("NOW UPDATING");
@@ -311,7 +311,7 @@ function updateCindy() {
     evaluate(cscompiled.draw);
     csport.greset();
     render();
-    csctx.restore();
+    renderer.restore();
 }
 
 function update() {

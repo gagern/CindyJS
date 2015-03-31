@@ -2256,7 +2256,7 @@ evaluator.greset$0 = function(args, modifs) {
     var n = csgstorage.stack.length;
     csport.greset();
     for (var i = 0; i < n; i++) {
-        csctx.restore();
+        renderer.restore();
     }
     return nada;
 };
@@ -2264,14 +2264,14 @@ evaluator.greset$0 = function(args, modifs) {
 
 evaluator.gsave$0 = function(args, modifs) {
     csport.gsave();
-    csctx.save();
+    renderer.save();
     return nada;
 };
 
 
 evaluator.grestore$0 = function(args, modifs) {
     csport.grestore();
-    csctx.restore();
+    renderer.restore();
     return nada;
 };
 

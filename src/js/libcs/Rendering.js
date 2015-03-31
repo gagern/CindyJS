@@ -296,18 +296,18 @@ Rendering.drawsegcore = function(pt1, pt2) {
     var overhang2x = overhang1 * endpoint2x + overhang2 * endpoint1x;
     var overhang2y = overhang1 * endpoint2y + overhang2 * endpoint1y;
 
-    csctx.lineWidth = Rendering.lsize;
-    csctx.lineCap = 'round';
-    csctx.lineJoin = 'miter';
-    csctx.strokeStyle = Rendering.lineColor;
+    renderer.setLineWidth(Rendering.lsize);
+    renderer.setLineCap('round');
+    renderer.setLineJoin('miter');
+    renderer.setStrokeColor(Rendering.lineColor);
 
     if (!Rendering.isArrow ||
         (endpoint1x === endpoint1y && endpoint2x === endpoint2y)) {
         // Fast path if we have no arrowheads
-        csctx.beginPath();
-        csctx.moveTo(overhang1x, overhang1y);
-        csctx.lineTo(overhang2x, overhang2y);
-        csctx.stroke();
+        renderer.beginPath();
+        renderer.moveTo(overhang1x, overhang1y);
+        renderer.lineTo(overhang2x, overhang2y);
+        renderer.stroke();
         return;
     }
 
@@ -331,7 +331,7 @@ Rendering.drawsegcore = function(pt1, pt2) {
     var y30add = headlen * (sinAngle * cos30 + cosAngle * sin30);
     var arrowSides = Rendering.arrowSides;
 
-    csctx.beginPath();
+    renderer.beginPath();
 
     // draw line in parts for full arrow
     if (Rendering.arrowShape === "full") {
@@ -342,32 +342,32 @@ Rendering.drawsegcore = function(pt1, pt2) {
             lx = tip1x + x30add;
             ly = tip1y + y30add;
             if (Rendering.arrowposition < 1.0) {
-                csctx.moveTo(overhang1x, overhang1y);
-                csctx.lineTo(tip1x, tip1y);
+                renderer.moveTo(overhang1x, overhang1y);
+                renderer.lineTo(tip1x, tip1y);
             }
-            csctx.moveTo((rx + lx) / 2, (ry + ly) / 2);
+            renderer.moveTo((rx + lx) / 2, (ry + ly) / 2);
         } else {
-            csctx.moveTo(overhang1x, overhang1y);
+            renderer.moveTo(overhang1x, overhang1y);
         }
         if (arrowSides === '==>' || arrowSides === '<==>') {
             rx = tip2x - x30sub;
             ry = tip2y - y30sub;
             lx = tip2x - x30add;
             ly = tip2y - y30add;
-            csctx.lineTo((rx + lx) / 2, (ry + ly) / 2);
+            renderer.lineTo((rx + lx) / 2, (ry + ly) / 2);
             if (Rendering.arrowposition < 1.0) {
-                csctx.moveTo(tip2x, tip2y);
-                csctx.lineTo(overhang2x, overhang2y);
+                renderer.moveTo(tip2x, tip2y);
+                renderer.lineTo(overhang2x, overhang2y);
             }
         } else {
-            csctx.lineTo(overhang2x, overhang2y);
+            renderer.lineTo(overhang2x, overhang2y);
         }
     } else {
-        csctx.moveTo(overhang1x, overhang1y);
-        csctx.lineTo(overhang2x, overhang2y);
+        renderer.moveTo(overhang1x, overhang1y);
+        renderer.lineTo(overhang2x, overhang2y);
     }
 
-    csctx.stroke();
+    renderer.stroke();
 
     // draw arrow heads at desired positions
     if (arrowSides === '==>' || arrowSides === '<==>') {
@@ -381,23 +381,23 @@ Rendering.drawsegcore = function(pt1, pt2) {
         var rx = tipx - sign * x30sub;
         var ry = tipy - sign * y30sub;
 
-        csctx.beginPath();
+        renderer.beginPath();
         if (Rendering.arrowShape === "full") {
-            csctx.lineWidth = Rendering.lsize / 2;
+            renderer.setLineWidth(Rendering.lsize / 2);
         }
         var lx = tipx - sign * x30add;
         var ly = tipy - sign * y30add;
-        csctx.moveTo(rx, ry);
-        csctx.lineTo(tipx, tipy);
-        csctx.lineTo(lx, ly);
+        renderer.moveTo(rx, ry);
+        renderer.lineTo(tipx, tipy);
+        renderer.lineTo(lx, ly);
         if (Rendering.arrowShape === "full") {
-            csctx.fillStyle = Rendering.lineColor;
-            csctx.closePath();
-            csctx.fill();
+            renderer.setFillColor(Rendering.lineColor);
+            renderer.closePath();
+            renderer.fill();
         } else if (Rendering.arrowShape !== "default") {
             console.error("arrowshape is unknown");
         }
-        csctx.stroke();
+        renderer.stroke();
     }
 
 };
@@ -408,18 +408,17 @@ Rendering.drawpoint = function(pt) {
     var xx = pt.x * m.a - pt.y * m.b + m.tx;
     var yy = pt.x * m.c - pt.y * m.d - m.ty;
 
-    csctx.lineWidth = Rendering.psize * 0.3;
-    csctx.beginPath();
-    csctx.arc(xx, yy, Rendering.psize, 0, 2 * Math.PI);
-    csctx.fillStyle = Rendering.pointColor;
+    renderer.setLineWidth(Rendering.psize * 0.3);
+    renderer.beginPath();
+    renderer.circle(xx, yy, Rendering.psize);
+    renderer.setFillColor(Rendering.pointColor);
 
-    csctx.fill();
+    renderer.fill();
 
-    csctx.beginPath();
-    csctx.arc(xx, yy, Rendering.psize * 1.15, 0, 2 * Math.PI);
-    csctx.fillStyle = Rendering.black;
-    csctx.strokeStyle = Rendering.black;
-    csctx.stroke();
+    renderer.beginPath();
+    renderer.circle(xx, yy, Rendering.psize * 1.15);
+    renderer.setStrokeColor(Rendering.black);
+    renderer.stroke();
 };
 
 Rendering.drawline = function(homog) {
@@ -483,15 +482,11 @@ Rendering.setDash = function(pattern, size) {
     for (var i = 0; i < pattern.length; i++) {
         pattern[i] *= s;
     }
-    csctx.webkitLineDash = pattern; //Safari
-    csctx.setLineDash(pattern); //Chrome
-    csctx.mozDash = pattern; //FFX
+    renderer.setLineDash(pattern);
 };
 
 Rendering.unSetDash = function() {
-    csctx.webkitLineDash = []; //Safari
-    csctx.setLineDash([]); //Chrome
-    csctx.mozDash = []; //FFX
+    renderer.setLineDash([]);
 };
 
 Rendering.setDashType = function(type, s) {

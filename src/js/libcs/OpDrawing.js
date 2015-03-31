@@ -110,24 +110,6 @@ eval_helper.drawcircle = function(args, modifs, df) {
     var v0 = evaluateAndVal(args[0]);
     var v1 = evaluateAndVal(args[1]);
 
-    function magic_circle(ctx, x, y, r) {
-        m = 0.551784;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(r, r);
-
-        ctx.beginPath();
-        ctx.moveTo(1, 0);
-        ctx.bezierCurveTo(1, -m, m, -1, 0, -1);
-        ctx.bezierCurveTo(-m, -1, -1, -m, -1, 0);
-        ctx.bezierCurveTo(-1, m, -m, 1, 0, 1);
-        ctx.bezierCurveTo(m, 1, 1, m, 1, 0);
-        ctx.closePath();
-        ctx.restore();
-    }
-
-
     var pt = eval_helper.extractPoint(v0);
 
 
@@ -143,23 +125,22 @@ eval_helper.drawcircle = function(args, modifs, df) {
     var size = 4;
     if (Rendering.size !== null)
         size = Rendering.size;
-    csctx.lineWidth = size * 0.4;
+    renderer.setLineWidth(size * 0.4);
 
-    csctx.beginPath();
-    csctx.arc(xx, yy, v1.value.real * m.sdet, 0, 2 * Math.PI);
-    //  magic_circle(csctx,xx,yy,v1.value.real*m.sdet);
+    renderer.beginPath();
+    renderer.circle(xx, yy, v1.value.real * m.sdet);
 
 
     if (df === "D") {
-        csctx.strokeStyle = Rendering.lineColor;
-        csctx.stroke();
+        renderer.setStrokeColor(Rendering.lineColor);
+        renderer.stroke();
     }
     if (df === "F") {
-        csctx.fillStyle = Rendering.lineColor;
-        csctx.fill();
+        renderer.setFillColor(Rendering.lineColor);
+        renderer.fill();
     }
     if (df === "C") {
-        csctx.clip();
+        renderer.clip();
     }
 
     return nada;
@@ -172,7 +153,7 @@ eval_helper.drawconic = function(aConic, modifs) {
     var size = 4;
     if (Rendering.size !== null)
         size = Rendering.size;
-    csctx.lineWidth = size * 0.4;
+    renderer.setLineWidth(size * 0.4);
 
     var eps = 1e-16;
     var mat = aConic.matrix;
@@ -295,13 +276,6 @@ eval_helper.drawconic = function(aConic, modifs) {
         return (x > 0 && x < csw && y > 0 && y < csh);
     };
 
-    //    var drawRect = function(x,y, col){
-    //    	csctx.strokeStyle = 'navy';
-    //    	if(col !== 'undefined') csctx.strokeStyle = col;
-    //    	csctx.beginPath();
-    //    	csctx.rect(x,y, 10, 10);
-    //    	csctx.stroke();
-    //    };
     // arrays to save points on conic
     var arr_x1 = [];
     var arr_x2 = [];
@@ -320,16 +294,15 @@ eval_helper.drawconic = function(aConic, modifs) {
     };
 
     var drawArray = function(x, y) {
-        csctx.strokeStyle = Rendering.lineColor;
-        csctx.lineWidth = size;
+        renderer.setStrokeColor(Rendering.lineColor);
+        renderer.setLineWidth(size);
 
-        csctx.beginPath();
+        renderer.beginPath();
         for (var i = 1; i < x.length; i++) {
-            csctx.moveTo(x[i - 1], y[i - 1]);
-            //csctx.fillRect(x[i],y[i],5,5);
-            csctx.lineTo(x[i], y[i]);
+            renderer.moveTo(x[i - 1], y[i - 1]);
+            renderer.lineTo(x[i], y[i]);
         }
-        csctx.stroke();
+        renderer.stroke();
     }; // end drawArray
 
 
@@ -483,11 +456,11 @@ eval_helper.drawconic = function(aConic, modifs) {
         drawArray(arr_x1, arr_y1);
         // bridge branches
         if (is_inside(arr_x1[0], arr_y1[1]) || is_inside(arr_x2[0], arr_y2[0])) { // drawing bug fix
-            csctx.beginPath();
+            renderer.beginPath();
             //csctx.strokeStyle = "pink";
-            csctx.moveTo(arr_x1[0], arr_y1[0]);
-            csctx.lineTo(arr_x2[0], arr_y2[0]);
-            csctx.stroke();
+            renderer.moveTo(arr_x1[0], arr_y1[0]);
+            renderer.lineTo(arr_x2[0], arr_y2[0]);
+            renderer.stroke();
         }
         //drawArray(arr_x2, arr_y2, "black");
         drawArray(arr_x2, arr_y2);
@@ -499,14 +472,14 @@ eval_helper.drawconic = function(aConic, modifs) {
         drawArray(arr_x1, arr_y1);
         // bridge branches
         if (type === "ellipsoid") {
-            csctx.beginPath();
-            csctx.moveTo(arr_x1[0], arr_y1[0]);
-            csctx.lineTo(arr_x2[0], arr_y2[0]);
-            csctx.stroke();
-            csctx.beginPath();
-            csctx.moveTo(arr_x1[arr_x1.length - 1], arr_y1[arr_y1.length - 1]);
-            csctx.lineTo(arr_x2[arr_x2.length - 1], arr_y2[arr_y2.length - 1]);
-            csctx.stroke();
+            renderer.beginPath();
+            renderer.moveTo(arr_x1[0], arr_y1[0]);
+            renderer.lineTo(arr_x2[0], arr_y2[0]);
+            renderer.stroke();
+            renderer.beginPath();
+            renderer.moveTo(arr_x1[arr_x1.length - 1], arr_y1[arr_y1.length - 1]);
+            renderer.lineTo(arr_x2[arr_x2.length - 1], arr_y2[arr_y2.length - 1]);
+            renderer.stroke();
             //}
         }
         //drawArray(arr_x2, arr_y2, "green");
@@ -565,9 +538,8 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
     var size = 4;
     if (Rendering.size !== null)
         size = Rendering.size;
-    csctx.lineWidth = size * 0.4;
-    csctx.mozFillRule = 'evenodd';
-    csctx.lineJoin = "round";
+    renderer.setLineWidth(size * 0.4);
+    renderer.setLineJoin("round");
 
     var m = csport.drawingstate.matrix;
 
@@ -581,11 +553,11 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
                 var xx = pt.X * m.a - pt.Y * m.b + m.tx;
                 var yy = pt.X * m.c - pt.Y * m.d - m.ty;
                 if (i === 0)
-                    csctx.moveTo(xx, yy);
+                    renderer.moveTo(xx, yy);
                 else
-                    csctx.lineTo(xx, yy);
+                    renderer.lineTo(xx, yy);
             }
-            csctx.closePath();
+            renderer.closePath();
         }
     }
 
@@ -599,16 +571,16 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
             var xx = pt.x * m.a - pt.y * m.b + m.tx;
             var yy = pt.x * m.c - pt.y * m.d - m.ty;
             if (i === 0)
-                csctx.moveTo(xx, yy);
+                renderer.moveTo(xx, yy);
             else
-                csctx.lineTo(xx, yy);
+                renderer.lineTo(xx, yy);
         }
         if (cycle)
-            csctx.closePath();
+            renderer.closePath();
     }
 
     var v0 = evaluate(args[0]);
-    csctx.beginPath();
+    renderer.beginPath();
     if (v0.ctype === 'list') {
         drawpoly();
     }
@@ -617,15 +589,15 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
     }
 
     if (df === "D") {
-        csctx.strokeStyle = Rendering.lineColor;
-        csctx.stroke();
+        renderer.setStrokeColor(Rendering.lineColor);
+        renderer.stroke();
     }
     if (df === "F") {
-        csctx.fillStyle = Rendering.lineColor;
-        csctx.fill();
+        renderer.setFillColor(Rendering.lineColor);
+        renderer.fill();
     }
     if (df === "C") {
-        csctx.clip();
+        renderer.clip();
     }
 
     return nada;
@@ -651,15 +623,12 @@ evaluator.drawtext$2 = function(args, modifs) {
     Rendering.handleModifs(modifs, Rendering.textModifs);
     var size = csport.drawingstate.textsize;
     if (Rendering.size !== null) size = Rendering.size;
-    csctx.fillStyle = Rendering.textColor;
+    renderer.setFillColor(Rendering.textColor);
 
-    csctx.font = Rendering.bold + Rendering.italics + Math.round(size * 10) / 10 + "px " + Rendering.family;
+    renderer.setFont(Rendering.bold + Rendering.italics + Math.round(size * 10) / 10 + "px " + Rendering.family);
     var txt = niceprint(v1);
-    var width = csctx.measureText(txt).width;
-    csctx.fillText(
-        txt,
-        xx - width * Rendering.align + Rendering.xOffset,
-        yy - Rendering.yOffset);
+    renderer.fillText(txt, xx + Rendering.xOffset, yy - Rendering.yOffset,
+        Rendering.align);
 
     return nada;
 
@@ -798,10 +767,10 @@ evaluator.plot$2 = function(args, modifs) {
                 steps = v.value.real;
         },
     });
-    csctx.strokeStyle = Rendering.lineColor;
-    csctx.lineWidth = Rendering.lsize;
-    csctx.lineCap = 'round';
-    csctx.lineJoin = 'round';
+    renderer.setStrokeColor(Rendering.lineColor);
+    renderer.setLineWidth(Rendering.lsize);
+    renderer.setLineCap('round');
+    renderer.setLineJoin('round');
 
     function canbedrawn(v) {
         return v.ctype === 'number' && CSNumber._helper.isAlmostReal(v);
@@ -828,14 +797,14 @@ evaluator.plot$2 = function(args, modifs) {
         var yy1 = xa * m.c - ya * m.d - m.ty;
 
         if (!stroking) {
-            csctx.beginPath();
-            csctx.moveTo(xx1, yy1);
-            csctx.lineTo(xx2, yy2);
+            renderer.beginPath();
+            renderer.moveTo(xx1, yy1);
+            renderer.lineTo(xx2, yy2);
             stroking = true;
         } else {
-            csctx.lineTo(xx1, yy1);
+            renderer.lineTo(xx1, yy1);
 
-            csctx.lineTo(xx2, yy2);
+            renderer.lineTo(xx2, yy2);
         }
 
     }
@@ -850,7 +819,7 @@ evaluator.plot$2 = function(args, modifs) {
         if ((step < minstep)) { //Feiner wollen wir  nicht das muss wohl ein Sprung sein
             if (!connectb) {
                 if (stroking) {
-                    csctx.stroke();
+                    renderer.stroke();
                     stroking = false;
                 }
 
@@ -933,18 +902,18 @@ evaluator.plot$2 = function(args, modifs) {
                         yy = x1 * m.c - y * m.d - m.ty;
 
                         if (!stroking) {
-                            csctx.beginPath();
-                            csctx.moveTo(xx, yy);
+                            renderer.beginPath();
+                            renderer.moveTo(xx, yy);
                             stroking = true;
                         } else {
-                            csctx.lineTo(xx, yy);
+                            renderer.lineTo(xx, yy);
                         }
 
                     }
 
 
                 }
-                csctx.stroke();
+                renderer.stroke();
 
                 namespace.removevar(runv);
 
@@ -972,11 +941,11 @@ evaluator.plot$2 = function(args, modifs) {
 
     //    console.log(count);
 
-    //   csctx.stroke();
+    //   renderer.stroke();
 
     namespace.removevar(runv);
     if (stroking)
-        csctx.stroke();
+        renderer.stroke();
 
     return nada;
 };
@@ -1008,9 +977,9 @@ evaluator.plotX$1 = function(args, modifs) { //OK
     var step = 0.01;
     var m = csport.drawingstate.matrix;
     var col = csport.drawingstate.linecolor;
-    csctx.fillStyle = col;
-    csctx.lineWidth = 1;
-    csctx.lineCap = 'round';
+    renderer.setFillColor(col);
+    renderer.setLineWidth(1);
+    renderer.setLineCap('round');
 
     var stroking = false;
 
@@ -1023,18 +992,18 @@ evaluator.plotX$1 = function(args, modifs) { //OK
             var xx = x * m.a - y * m.b + m.tx;
             var yy = x * m.c - y * m.d - m.ty;
             if (!stroking) {
-                csctx.beginPath();
-                csctx.moveTo(xx, yy);
+                renderer.beginPath();
+                renderer.moveTo(xx, yy);
                 stroking = true;
             } else {
-                csctx.lineTo(xx, yy);
+                renderer.lineTo(xx, yy);
             }
 
         }
 
 
     }
-    csctx.stroke();
+    renderer.stroke();
 
     namespace.removevar(runv);
 
@@ -1116,9 +1085,7 @@ eval_helper.plotvars = function(a) {
 
 
 evaluator.clrscr$0 = function(args, modifs) {
-    if (typeof csw !== 'undefined' && typeof csh !== 'undefined') {
-        csctx.clearRect(0, 0, csw, csh);
-    }
+    renderer.clear();
     return nada;
 };
 

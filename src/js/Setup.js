@@ -60,7 +60,7 @@ function initialTransformation(data) {
     }
 }
 
-var csmouse, csctx, csw, csh, csgeo, images;
+var csmouse, renderer, csw, csh, csgeo, images;
 
 function createCindyNow() {
     var data = instanceInvocationArguments;
@@ -71,9 +71,7 @@ function createCindyNow() {
     if (!c && typeof document !== "undefined")
         c = document.getElementById(data.canvasname);
     if (c) {
-        csctx = c.getContext("2d");
-        if (!csctx.setLineDash)
-            csctx.setLineDash = function() {};
+        renderer = new Render2D(c.getContext("2d"), c.width, c.height);
     }
 
     //Run initialscript

@@ -99,7 +99,6 @@ evaluator.drawimage$2 = function(args, modifs) {
             return nada;
         }
 
-        csctx.save();
         handleModifs();
 
 
@@ -128,27 +127,14 @@ evaluator.drawimage$2 = function(args, modifs) {
         var sc = Math.sqrt(xx1 * xx1 + yy1 * yy1) / Math.sqrt(ixx1 * ixx1 + iyy1 * iyy1);
         var ang = -Math.atan2(xx1, yy1) + Math.atan2(ixx1, iyy1);
 
-
-        if (alpha !== 1)
-            csctx.globalAlpha = alpha;
-
-        csctx.translate(xx, yy);
-        csctx.scale(scax * flipx * sc, scay * flipy * sc);
-
-
-        csctx.rotate(rot + ang);
-
-
-        csctx.translate(-xx, -yy);
-        csctx.translate(-w / 2, -h / 2);
-
-
-        csctx.drawImage(images[img.value], xx, yy);
-        csctx.globalAlpha = 1;
-
-        csctx.restore();
-
-
+        renderer.save();
+        renderer.translate(xx, yy);
+        renderer.scale(scax * flipx * sc, scay * flipy * sc);
+        renderer.rotate(rot + ang);
+        renderer.translate(-xx, -yy);
+        renderer.translate(-w / 2, -h / 2);
+        renderer.drawImage(images[img.value], xx, yy, alpha);
+        renderer.restore();
     }
 
 
@@ -225,16 +211,11 @@ evaluator.drawimage$2 = function(args, modifs) {
             if (!pt1.ok) return nada;
         }
 
-        csctx.save();
         handleModifs();
 
 
         var m = csport.drawingstate.matrix;
         var initm = csport.drawingstate.initialmatrix;
-
-
-        if (alpha !== 1)
-            csctx.globalAlpha = alpha;
 
         var xx1 = pt1.x * m.a - pt1.y * m.b + m.tx;
         var yy1 = pt1.x * m.c - pt1.y * m.d - m.ty;
@@ -245,21 +226,15 @@ evaluator.drawimage$2 = function(args, modifs) {
         var xx3 = pt3.x * m.a - pt3.y * m.b + m.tx;
         var yy3 = pt3.x * m.c - pt3.y * m.d - m.ty;
 
-        csctx.transform(xx2 - xx1, yy2 - yy1, xx3 - xx1, yy3 - yy1, xx1, yy1);
-        csctx.scale(1 / w, -1 / h * aspect);
-
-        csctx.translate(w / 2, -h / 2);
-        csctx.scale(flipx, flipy);
-        csctx.translate(-w / 2, h / 2);
-
-        csctx.translate(0, -h);
-
-
-        csctx.drawImage(images[img.value], 0, 0);
-        csctx.globalAlpha = 1;
-
-        csctx.restore();
-
+        renderer.save();
+        renderer.transform(xx2 - xx1, yy2 - yy1, xx3 - xx1, yy3 - yy1, xx1, yy1);
+        renderer.scale(1 / w, -1 / h * aspect);
+        renderer.translate(w / 2, -h / 2);
+        renderer.scale(flipx, flipy);
+        renderer.translate(-w / 2, h / 2);
+        renderer.translate(0, -h);
+        renderer.drawImage(images[img.value], 0, 0, alpha);
+        renderer.restore();
 
     }
 
