@@ -123,7 +123,7 @@ RenderSVG.prototype.scale = function(x, y) {
 
 RenderSVG.prototype.rotate = function() {
     var t = this.svg.createSVGTransform();
-    t.setRotate(angle, 0, 0); // do we have to convert to degrees?
+    t.setRotate(angle, 0, 0);
     this.appendTransform(t);
 };
 
@@ -163,6 +163,12 @@ RenderSVG.prototype.fillText = function(txt, x, y, align) {
     text.y.baseVal.initialize(yy);
     text.style.font = this.font;
     text.style.fill = this.fillColor;
+    if (align < 1/3.)
+        text.style.textAnchor = "start";
+    else if (align > 2/3.)
+        text.style.textAnchor = "end";
+    else
+        text.style.textAnchor = "middle";
     this.currentGroup.appendChild(text);
 };
 
