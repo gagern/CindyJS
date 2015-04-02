@@ -80,4 +80,8 @@ var createCindy = (function() {
                 }
                 createCindy._pluginRegistry[pluginName] = initCallback;
             };
+            var uidCounter = Date.now() - 1400000000000;
+            createCindy.createUniqueId = function() {
+                return "cdyId" + (++uidCounter);
+            };
             createCindy.newInstance = function(instanceInvocationArguments) {

@@ -71,7 +71,19 @@ function createCindyNow() {
     if (!c && typeof document !== "undefined")
         c = document.getElementById(data.canvasname);
     if (c) {
-        renderer = new Render2D(c.getContext("2d"), c.width, c.height);
+        if (typeof window !== "undefined" &&
+            /[?&]cindy\.renderer=svg&/.test(window.location.search + "&")) {
+            renderer = new RenderSVG(c);
+            c = renderer.svg;
+            csw = +c.getAttribute("width");
+            csh = +c.getAttribute("height");
+        } else {
+            renderer = new Render2D(c.getContext("2d"), c.width, c.height);
+            csw = c.width;
+            csh = c.height;
+        }
+        csport.drawingstate.matrix.ty = csport.drawingstate.matrix.ty - csh;
+        csport.drawingstate.initialmatrix.ty = csport.drawingstate.initialmatrix.ty - csh;
     }
 
     //Run initialscript
@@ -117,13 +129,6 @@ function createCindyNow() {
     if (data.snap) cssnap = data.snap;
     initialTransformation(data);
 
-    if (c) {
-        csw = c.width;
-        csh = c.height;
-        csport.drawingstate.matrix.ty = csport.drawingstate.matrix.ty - csh;
-        csport.drawingstate.initialmatrix.ty = csport.drawingstate.initialmatrix.ty - csh;
-    }
-
     csgeo = {};
 
     var i = 0;
@@ -149,10 +154,8 @@ function createCindyNow() {
         images[k].ready = false;
         /*jshint -W083 */
         images[k].onload = function() {
-            images[k].ready = true;
+            this.ready = true;
             updateCindy();
-
-
         };
         /*jshint +W083 */
         images[k].src = name;

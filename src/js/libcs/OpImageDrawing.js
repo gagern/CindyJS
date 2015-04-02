@@ -106,6 +106,7 @@ evaluator.drawimage$2 = function(args, modifs) {
         var initm = csport.drawingstate.initialmatrix;
 
 
+        if (!images[img.value].ready) return;
         var w = images[img.value].width;
         var h = images[img.value].height;
 
@@ -195,6 +196,7 @@ evaluator.drawimage$2 = function(args, modifs) {
         // console.lof(JSON.stringify(images));
         if (images === undefined || images[img.value] === 'undefined')
             return;
+        if (!images[img.value].ready) return;
         var w = images[img.value].width;
         var h = images[img.value].height;
 

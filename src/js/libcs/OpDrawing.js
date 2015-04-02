@@ -11,7 +11,7 @@ eval_helper.extractPoint = function(v1) {
         if (val.kind === "P") {
             erg.x = Accessor.getField(val, "x").value.real;
             erg.y = Accessor.getField(val, "y").value.real;
-            erg.ok = true;
+            erg.ok = isFinite(erg.x) && isFinite(erg.y);
             return erg;
         }
 
@@ -31,7 +31,7 @@ eval_helper.extractPoint = function(v1) {
         if (n1.ctype === 'number' && n2.ctype === 'number') {
             erg.x = n1.value.real;
             erg.y = n2.value.real;
-            erg.ok = true;
+            erg.ok = isFinite(erg.x) && isFinite(erg.y);
             return erg;
         }
     }
@@ -45,7 +45,7 @@ eval_helper.extractPoint = function(v1) {
             n2 = CSNumber.div(n2, n3);
             erg.x = n1.value.real;
             erg.y = n2.value.real;
-            erg.ok = true;
+            erg.ok = isFinite(erg.x) && isFinite(erg.y);
             return erg;
         }
     }
