@@ -305,6 +305,19 @@ function tracing2(n1, n2) {
     return List.turnIntoCSList(res);
 }
 
+function tracing4(n1, n2, n3, n4) {
+    var o1 = getStateComplexVector(3);
+    var o2 = getStateComplexVector(3);
+    var o3 = getStateComplexVector(3);
+    var o5 = getStateComplexVector(3);
+    var res = tracing4core(n1, n2, n3, n4, o1, o2, o3, o4);
+    putStateComplexVector(res[0]);
+    putStateComplexVector(res[1]);
+    putStateComplexVector(res[2]);
+    putStateComplexVector(res[3]);
+    return List.turnIntoCSList(res);
+}
+
 function tracing2core(n1, n2, o1, o2) {
     var safety = 3;
 
