@@ -309,8 +309,9 @@ function tracing4(n1, n2, n3, n4) {
     var o1 = getStateComplexVector(3);
     var o2 = getStateComplexVector(3);
     var o3 = getStateComplexVector(3);
-    var o5 = getStateComplexVector(3);
+    var o4 = getStateComplexVector(3);
     var res = tracing4core(n1, n2, n3, n4, o1, o2, o3, o4);
+
     putStateComplexVector(res[0]);
     putStateComplexVector(res[1]);
     putStateComplexVector(res[2]);
@@ -319,6 +320,8 @@ function tracing4(n1, n2, n3, n4) {
 }
 
 function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
+    //var debug = function() {};
+    var debug = console.log.bind(console);
     var safety = 3;
 
     var old_el = [o1, o2, o3, o4];
@@ -329,31 +332,16 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     var res = [n1, n2, n3, n4];
 
     if (tracingInitial)
-        return [n1, n2, n3, n4];
+        return res;
 
-    var do1o2 = List.projectiveDistMinScal(o1, o2);
-    var do1o3 = List.projectiveDistMinScal(o1, o3);
-    var do1o4 = List.projectiveDistMinScal(o1, o4);
 
-    var do2o3 = List.projectiveDistMinScal(o2, o3);
-    var do2o4 = List.projectiveDistMinScal(o2, o4);
+    var dist_old_new = []; // this will hold old to new points matching distance o1n1, o2n3 ... after matching
 
-    var do3o4 = List.projectiveDistMinScal(o3, o4);
-
-    var swapel = function(a, b){
-        var h = a;
-        a = b;
-        b = h;
-    }
-
-    var perm = [0, 1, 2, 3];
-    var d0, d1, d2, d3;
-    var dsum = 0;
-
-    // reorder elements 
-    var val, dist, min_dist = Infinity, idx, tmp;
+    // reorder elements -- could be easily generelized
+    var dist, min_dist = Infinity, idx, tmp;
+    var dsum = 0; // record total costs
     for(var i = 0; i < 4; i++){
-        for(k = i; k < 4; k++){
+        for(var k = i; k < 4; k++){
             dist = List.projectiveDistMinScal(old_el[i], new_el[k]);
             if(dist < min_dist){
                 idx = k;
@@ -368,8 +356,120 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
             res[idx] = tmp;
         }
         dsum += min_dist;
+        dist_old_new[i] = min_dist;
         min_dist = Infinity;
     }
+
+    // assume now we have machting between res and old_el
+
+//    var zero_arr = [[0,0,0,0],
+//                    [0,0,0,0],
+//                    [0,0,0,0],
+//                    [0,0,0,0]];
+
+    // calc diststance between old points
+//    var old_dists = zero_arr;
+//    var new_dists = zero_arr;
+    var odist, ndist, diff, match_cost;
+    var need_refine = false;
+    for(var i = 0; i < 4; i++){
+        if (List._helper.isNaN(new_el[i])) { 
+            // Something went very wrong, numerically speaking. We have no
+            // clue whether refining will make things any better, so we
+            // assume it won't and give up.
+            debug("Tracing failed due to NaNs.");
+            tracingFailed = true;
+            break;
+        }
+            for(var j = i; j < 4; j++){
+            if(i === j) continue;
+                match_cost = dist_old_new[i];
+                match_cost *= safety;
+
+                odist = List.projectiveDistMinScal(old_el[i], old_el[j]); // this is do1o2...
+                ndist = List.projectiveDistMinScal(new_el[i], new_el[j]); // this is dn1n2...
+                            
+                    if (odist > match_cost && ndist > match_cost) {
+                        // Distance within matching considerably smaller than distance
+                        // across matching, so we could probably match correctly.
+                        debug("Normal case, everything all right.");
+                    } else if (ndist < 1e-5) {
+                        // New points too close: we presumably are inside a singularity.
+                        if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
+                            // The last "good" position was already singular.
+                            // Nothing we can do about this.
+                            debug("Staying inside singularity.");
+                        } else {
+                            // We newly moved into the singularity. New position is
+                            // not "good", but refining won't help since the endpoint
+                            // is singular.
+                            debug("Moved into singularity.");
+                            tracingFailed = true;
+                        }
+                    } else if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
+                        // We just moved out of a singularity. Things can only get
+                        // better. If the singular situation was "good", we stay
+                        // "good", and keep track of things from now on.
+                        debug("Moved out of singularity.");
+                    } else {
+                        // Neither old nor new position looks singular, so there was
+                        // an avoidable singularity along the way. Refine to avoid it.
+                        if (noMoreRefinements)
+                            debug("Reached refinement limit, giving up.");
+                        else
+                            debug("Need to refine.");
+                        need_refine = true;
+                    }
+        } // end j for
+    } // end i for
+
+    if(need_refine) requestRefinement();
+    return res;
+
+
+
+//    if (List._helper.isNaN(n1) || List._helper.isNaN(n2) List._helper.isNaN(n3) || List._helper.isNaN(n4)) {
+//        // Something went very wrong, numerically speaking. We have no
+//        // clue whether refining will make things any better, so we
+//        // assume it won't and give up.
+//        debug("Tracing failed due to NaNs.");
+//        tracingFailed = true;
+//    } else if (do1o2 > cost * safety && dn1n2 > cost * safety) {
+//        // Distance within matching considerably smaller than distance
+//        // across matching, so we could probably match correctly.
+//        debug("Normal case, everything all right.");
+//    } else if (dn1n2 < 1e-5) {
+//        // New points too close: we presumably are inside a singularity.
+//        if (do1o2 < 1e-5) { // Cinderella uses the constant 1e-6 here
+//            // The last "good" position was already singular.
+//            // Nothing we can do about this.
+//            debug("Staying inside singularity.");
+//        } else {
+//            // We newly moved into the singularity. New position is
+//            // not "good", but refining won't help since the endpoint
+//            // is singular.
+//            debug("Moved into singularity.");
+//            tracingFailed = true;
+//        }
+//    } else if (do1o2 < 1e-5) { // Cinderella uses the constant 1e-6 here
+//        // We just moved out of a singularity. Things can only get
+//        // better. If the singular situation was "good", we stay
+//        // "good", and keep track of things from now on.
+//        debug("Moved out of singularity.");
+//    } else {
+//        // Neither old nor new position looks singular, so there was
+//        // an avoidable singularity along the way. Refine to avoid it.
+//        if (noMoreRefinements)
+//            debug("Reached refinement limit, giving up.");
+//        else
+//            debug("Need to refine.");
+//        requestRefinement();
+//    }
+//    return res;
+
+    // now check in which case we are
+
+
 
 
 //    var do1n1 = List.projectiveDistMinScal(o1, n1);
