@@ -323,24 +323,11 @@ tracing4.stateSize = 24; // four three-element complex vectors
 
 function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     var debug = function() {};
-//   var debug = console.log.bind(console);
+    //   var debug = console.log.bind(console);
     var safety = 3;
-
- //   List.println(o1);
- //   List.println(o2);
- //   List.println(o3);
- //   List.println(o4);
-
- //   console.log("====");
- //   List.println(n1);
- //   List.println(n2);
- //   List.println(n3);
- //   List.println(n4);
- //   console.log("====");
 
     var old_el = [o1, o2, o3, o4];
     var new_el = [n1, n2, n3, n4];
-
 
     // first we leave everything to input
     var res = [n1, n2, n3, n4];
@@ -348,51 +335,38 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     if (tracingInitial)
         return res;
 
-
     var dist_old_new = []; // this will hold old to new points matching distance o1n1, o2n3 ... after matching
 
     // reorder elements -- could be easily generelized
-    var dist, min_dist = Infinity, idx, tmp;
+    var dist, min_dist = Infinity,
+        idx, tmp;
     var dsum = 0; // record total costs
-    for(var i = 0; i < 4; i++){
-        for(var k = i; k < 4; k++){
+    for (var i = 0; i < 4; i++) {
+        for (var k = i; k < 4; k++) {
             dist = List.projectiveDistMinScal(old_el[i], res[k]);
-//            dist = List.abs(List.sub(List.normalizeZ(old_el[i]),  List.normalizeZ(new_el[k]))).value.real;
-           // List.println(old_el[i]);
-           // List.println(new_el[k]);
-           // console.log(dist);
-            if(dist < min_dist){
+            if (dist < min_dist) {
                 idx = k;
                 min_dist = dist;
             }
 
         }
         // swap elements if necessary
-        if(idx !== i){
+        if (idx !== i) {
             tmp = res[i];
             res[i] = res[idx];
             res[idx] = tmp;
         }
         dsum += min_dist;
         dist_old_new[i] = min_dist;
-        //console.log(min_dist);
         min_dist = Infinity;
     }
 
     // assume now we have machting between res and old_el
 
-//    var zero_arr = [[0,0,0,0],
-//                    [0,0,0,0],
-//                    [0,0,0,0],
-//                    [0,0,0,0]];
-
-    // calc diststance between old points
-//    var old_dists = zero_arr;
-//    var new_dists = zero_arr;
     var odist, ndist, diff, match_cost;
     var need_refine = false;
-    for(var ii = 0; ii < 4; ii++){
-        if (List._helper.isNaN(new_el[ii])) { 
+    for (var ii = 0; ii < 4; ii++) {
+        if (List._helper.isNaN(new_el[ii])) {
             // Something went very wrong, numerically speaking. We have no
             // clue whether refining will make things any better, so we
             // assume it won't and give up.
@@ -400,345 +374,53 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
             tracingFailed = true;
             break;
         }
-            for(var jj = ii; jj < 4; jj++){
-            if(ii === jj) continue;
-                match_cost = dist_old_new[ii];
-                match_cost *= safety;
-                debug("match_cost", match_cost);
+        for (var jj = ii; jj < 4; jj++) {
+            if (ii === jj) continue;
+            match_cost = dist_old_new[ii];
+            match_cost *= safety;
 
-                //console.log(old_el[i], new_el[i]);
-                odist = List.projectiveDistMinScal(old_el[ii], old_el[jj]); // this is do1o2...
-                ndist = List.projectiveDistMinScal(new_el[ii], new_el[jj]); // this is dn1n2...
-                //debug("odist", odist);
-                //debug("ndist", ndist);
-                            
-                    if (odist > match_cost && ndist > match_cost) {
-                        // Distance within matching considerably smaller than distance
-                        // across matching, so we could probably match correctly.
-//                        debug("Normal case, everything all right.");
-                    } else if (ndist < 1e-5) {
-                        // New points too close: we presumably are inside a singularity.
-                        if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
-                            // The last "good" position was already singular.
-                            // Nothing we can do about this.
- //                           debug("Staying inside singularity.");
-                        } else {
-                            // We newly moved into the singularity. New position is
-                            // not "good", but refining won't help since the endpoint
-                            // is singular.
-  //                          debug("Moved into singularity.");
-                            tracingFailed = true;
-                        }
-                    } else if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
-                        // We just moved out of a singularity. Things can only get
-                        // better. If the singular situation was "good", we stay
-                        // "good", and keep track of things from now on.
-   //                     debug("Moved out of singularity.");
-                    } else {
-                        //console.log(odist, ndist, match_cost);
-                        // Neither old nor new position looks singular, so there was
-                        // an avoidable singularity along the way. Refine to avoid it.
-                        if (noMoreRefinements)
-                            debug("Reached refinement limit, giving up.");
-                        else{
-                            debug("Need to refine.");
-                        need_refine = true;
-                        }
-                    }
-        } // end j for
-    } // end i for
+            odist = List.projectiveDistMinScal(old_el[ii], old_el[jj]); // this is do1o2...
+            ndist = List.projectiveDistMinScal(new_el[ii], new_el[jj]); // this is dn1n2...
 
-    if(need_refine) requestRefinement();
+            if (odist > match_cost && ndist > match_cost) {
+                // Distance within matching considerably smaller than distance
+                // across matching, so we could probably match correctly.
+            } else if (ndist < 1e-5) {
+                // New points too close: we presumably are inside a singularity.
+                if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
+                    // The last "good" position was already singular.
+                    // Nothing we can do about this.
+                    debug("Staying inside singularity.");
+                } else {
+                    // We newly moved into the singularity. New position is
+                    // not "good", but refining won't help since the endpoint
+                    // is singular.
+                    debug("Moved into singularity.");
+                    tracingFailed = true;
+                }
+            } else if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
+                // We just moved out of a singularity. Things can only get
+                // better. If the singular situation was "good", we stay
+                // "good", and keep track of things from now on.
+                debug("Moved out of singularity.");
+            } else {
+                //console.log(odist, ndist, match_cost);
+                // Neither old nor new position looks singular, so there was
+                // an avoidable singularity along the way. Refine to avoid it.
+                if (noMoreRefinements)
+                    debug("Reached refinement limit, giving up.");
+                else {
+                    debug("Need to refine.");
+                    need_refine = true;
+                }
+            }
+        }
+    }
+
+    if (need_refine) requestRefinement();
     return res;
 
 }
-
-
-//    if (List._helper.isNaN(n1) || List._helper.isNaN(n2) List._helper.isNaN(n3) || List._helper.isNaN(n4)) {
-//        // Something went very wrong, numerically speaking. We have no
-//        // clue whether refining will make things any better, so we
-//        // assume it won't and give up.
-//        debug("Tracing failed due to NaNs.");
-//        tracingFailed = true;
-//    } else if (do1o2 > cost * safety && dn1n2 > cost * safety) {
-//        // Distance within matching considerably smaller than distance
-//        // across matching, so we could probably match correctly.
-//        debug("Normal case, everything all right.");
-//    } else if (dn1n2 < 1e-5) {
-//        // New points too close: we presumably are inside a singularity.
-//        if (do1o2 < 1e-5) { // Cinderella uses the constant 1e-6 here
-//            // The last "good" position was already singular.
-//            // Nothing we can do about this.
-//            debug("Staying inside singularity.");
-//        } else {
-//            // We newly moved into the singularity. New position is
-//            // not "good", but refining won't help since the endpoint
-//            // is singular.
-//            debug("Moved into singularity.");
-//            tracingFailed = true;
-//        }
-//    } else if (do1o2 < 1e-5) { // Cinderella uses the constant 1e-6 here
-//        // We just moved out of a singularity. Things can only get
-//        // better. If the singular situation was "good", we stay
-//        // "good", and keep track of things from now on.
-//        debug("Moved out of singularity.");
-//    } else {
-//        // Neither old nor new position looks singular, so there was
-//        // an avoidable singularity along the way. Refine to avoid it.
-//        if (noMoreRefinements)
-//            debug("Reached refinement limit, giving up.");
-//        else
-//            debug("Need to refine.");
-//        requestRefinement();
-//    }
-//    return res;
-
-    // now check in which case we are
-
-
-
-
-//    var do1n1 = List.projectiveDistMinScal(o1, n1);
-//    var do1n2 = List.projectiveDistMinScal(o1, n2);
-//    var do2n1 = List.projectiveDistMinScal(o2, n1);
-//    var do2n2 = List.projectiveDistMinScal(o2, n2);
-//    var do1o2 = List.projectiveDistMinScal(o1, o2);
-//    var dn1n2 = List.projectiveDistMinScal(n1, n2);
-
-//abstract public class Tracing4Algorithm
-//        extends AbstractAlgorithm {
-//
-//    public Vec[] out = {new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0)};
-//    public Vec[] p = new Vec[4];
-//    public Vec[] check = {new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0)};
-//
-//    public int[] perm = {0, 1, 2, 3};
-//    private Int too_close01 = new Int();
-//    private Int too_close02 = new Int();
-//    private Int too_close03 = new Int();
-//    private Int too_close12 = new Int();
-//    private Int too_close13 = new Int();
-//    private Int too_close23 = new Int();
-//
-//    double dsum;
-//
-//    final static double security = 3.0;
-//
-//    public void reset() {
-//        too_close01.i = OK;
-//        too_close02.i = OK;
-//        too_close03.i = OK;
-//        too_close12.i = OK;
-//        too_close13.i = OK;
-//        too_close23.i = OK;
-//        //cat.debug(this+"  reset  too_close" +too_close);
-//    }
-//
-//    public int trace() {
-//
-//        double dist, d0, d1, d2, d3;
-//        double lastDist;
-//        int h;
-//
-//        // zunächst ordnen wir irgendwie zu
-//
-//        double do0o1 = check[0].projectiveDistMinScal(check[1]);
-//        double do0o2 = check[0].projectiveDistMinScal(check[2]);
-//        double do0o3 = check[0].projectiveDistMinScal(check[3]);
-//        double do1o2 = check[1].projectiveDistMinScal(check[2]);
-//        double do1o3 = check[1].projectiveDistMinScal(check[3]);
-//        double do2o3 = check[2].projectiveDistMinScal(check[3]);
-//
-//        perm[0] = 0;
-//        perm[1] = 1;
-//        perm[2] = 2;
-//        perm[3] = 3;
-//
-//        d0 = check[0].projectiveDistMinScal(out[0]);
-//        d1 = check[0].projectiveDistMinScal(out[1]);
-//        d2 = check[0].projectiveDistMinScal(out[2]);
-//        d3 = check[0].projectiveDistMinScal(out[3]);
-//
-//        //cat.debug("======================================================================");
-//        //cat.debug(d0+" "+d1+" "+d2+" "+d3);
-//        if (d1 <= d0 && d1 <= d2 && d1 <= d3) {
-//            h = perm[0];
-//            perm[0] = perm[1];
-//            perm[1] = h;
-//            dsum = d1;
-//        } else if (d2 <= d0 && d2 <= d1 && d2 <= d3) {
-//            h = perm[0];
-//            perm[0] = perm[2];
-//            perm[2] = h;
-//            dsum = d2;
-//        } else if (d3 <= d0 && d3 <= d1 && d3 <= d2) {
-//            h = perm[0];
-//            perm[0] = perm[3];
-//            perm[3] = h;
-//            dsum = d3;
-//        } else
-//            dsum = d0;
-//
-//        d1 = check[1].projectiveDistMinScal(out[perm[1]]);
-//        d2 = check[1].projectiveDistMinScal(out[perm[2]]);
-//        d3 = check[1].projectiveDistMinScal(out[perm[3]]);
-//        //cat.debug(d1+" "+d2+" "+d3);
-//
-//        if (d2 <= d1 && d2 <= d3) {
-//            h = perm[1];
-//            perm[1] = perm[2];
-//            perm[2] = h;
-//            dsum += d2;
-//        } else if (d3 <= d1 && d3 <= d2) {
-//            h = perm[1];
-//            perm[1] = perm[3];
-//            perm[3] = h;
-//            dsum += d3;
-//        } else
-//            dsum += d1;
-//
-//        d2 = check[2].projectiveDistMinScal(out[perm[2]]);
-//        d3 = check[2].projectiveDistMinScal(out[perm[3]]);
-//        //cat.debug(d2+" "+d3);
-//
-//        if (d3 <= d2) {
-//            h = perm[2];
-//            perm[2] = perm[3];
-//            perm[3] = h;
-//            dsum += d3;
-//        } else
-//            dsum += d2;
-//
-//        d3 = check[3].projectiveDistMinScal(out[perm[3]]);
-//        //cat.debug(d3);
-//        dsum += d3;
-//
-//        p[0] = out[perm[0]];
-//        p[1] = out[perm[1]];
-//        p[2] = out[perm[2]];
-//        p[3] = out[perm[3]];
-//        ((PGFlat) output[0]).coord.assign(p[0]);
-//        ((PGFlat) output[1]).coord.assign(p[1]);
-//        ((PGFlat) output[2]).coord.assign(p[2]);
-//        ((PGFlat) output[3]).coord.assign(p[3]);
-//        boolean tooClose = false;
-//
-//        double dn0n1 = p[0].projectiveDistMinScal(p[1]);
-//        if (do0o1 > 0.001 && dn0n1 < 0.001) too_close01.i = INVALID;
-//        double dn0n2 = p[0].projectiveDistMinScal(p[2]);
-//        if (do0o2 > 0.001 && dn0n2 < 0.001) too_close02.i = INVALID;
-//        double dn0n3 = p[0].projectiveDistMinScal(p[3]);
-//        if (do0o3 > 0.001 && dn0n3 < 0.001) too_close03.i = INVALID;
-//        double dn1n2 = p[1].projectiveDistMinScal(p[2]);
-//        if (do1o2 > 0.001 && dn1n2 < 0.001) too_close12.i = INVALID;
-//        double dn1n3 = p[1].projectiveDistMinScal(p[3]);
-//        if (do1o3 > 0.001 && dn1n3 < 0.001) too_close13.i = INVALID;
-//        double dn2n3 = p[2].projectiveDistMinScal(p[3]);
-//        if (do2o3 > 0.001 && dn2n3 < 0.001) too_close23.i = INVALID;
-//
-//        //TOO_CLOSE ABGEARBEITET !!!
-//
-//        lastDist = 1000;
-//
-//        if (do0o1 > 0.001 && too_close01.i == OK) {
-//            dist = p[0].projectiveDistMinScal(p[1]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//        if (do0o2 > 0.001 && too_close02.i == OK) {
-//            dist = p[0].projectiveDistMinScal(p[2]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//        if (do0o3 > 0.001 && too_close03.i == OK) {
-//            dist = p[0].projectiveDistMinScal(p[3]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//        if (do1o2 > 0.001 && too_close12.i == OK) {
-//            dist = p[1].projectiveDistMinScal(p[2]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//        if (do1o3 > 0.001 && too_close13.i == OK) {
-//            dist = p[1].projectiveDistMinScal(p[3]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//        if (do2o3 > 0.001 && too_close23.i == OK) {
-//            dist = p[2].projectiveDistMinScal(p[3]);
-//            lastDist = (lastDist < dist ? lastDist : dist);
-//        }
-//
-//        if (lastDist / security > dsum) {
-//            return OK | too_close01.i
-//                    | too_close02.i
-//                    | too_close03.i
-//                    | too_close12.i
-//                    | too_close13.i
-//                    | too_close23.i;
-//        }
-//
-//        return DECREASE_STEP | too_close01.i
-//                | too_close02.i
-//                | too_close03.i
-//                | too_close12.i
-//                | too_close13.i
-//                | too_close23.i;
-//    }
-//
-//    public void setCheckpointsToTraced() {
-//        check[0].assign(((PGFlat) output[0]).coord);
-//        check[1].assign(((PGFlat) output[1]).coord);
-//        check[2].assign(((PGFlat) output[2]).coord);
-//        check[3].assign(((PGFlat) output[3]).coord);
-//    }
-//
-//    public void setCheckpointsToCurrent() {
-//        check[0].assign(((PGFlat) output[0]).coord);
-//        check[1].assign(((PGFlat) output[1]).coord);
-//        check[2].assign(((PGFlat) output[2]).coord);
-//        check[3].assign(((PGFlat) output[3]).coord);
-//    }
-//
-//    public void register(Register register, UndoRegister undoRegister) {
-//        super.register(register, undoRegister);
-//        register.register(too_close01);
-//        register.register(too_close02);
-//        register.register(too_close03);
-//        register.register(too_close12);
-//        register.register(too_close13);
-//        register.register(too_close23);
-//        register.register(check[0]);
-//        register.register(check[1]);
-//        register.register(check[2]);
-//        register.register(check[3]);
-//        undoRegister.register(too_close01);
-//        undoRegister.register(too_close02);
-//        undoRegister.register(too_close03);
-//        undoRegister.register(too_close12);
-//        undoRegister.register(too_close13);
-//        undoRegister.register(too_close23);
-//        undoRegister.register(check[0]);
-//        undoRegister.register(check[1]);
-//        undoRegister.register(check[2]);
-//        undoRegister.register(check[3]);
-//    }
-//
-//    public void unregister(Register register, UndoRegister undoRegister) {
-//        super.unregister(register, undoRegister);
-//        undoRegister.unregister(too_close01);
-//        undoRegister.unregister(too_close02);
-//        undoRegister.unregister(too_close03);
-//        undoRegister.unregister(too_close12);
-//        undoRegister.unregister(too_close13);
-//        undoRegister.unregister(too_close23);
-//        undoRegister.unregister(check[0]);
-//        undoRegister.unregister(check[1]);
-//        undoRegister.unregister(check[2]);
-//        undoRegister.unregister(check[3]);
-//    }
-//
-//    public int needsTrace() {
-//        return YES;
-//    }
-//
-//}
 
 function tracing2core(n1, n2, o1, o2) {
     var safety = 3;
