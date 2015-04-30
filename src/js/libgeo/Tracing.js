@@ -318,6 +318,303 @@ function tracing4(n1, n2, n3, n4) {
     return List.turnIntoCSList(res);
 }
 
+function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
+    var safety = 3;
+
+    var old_el = [o1, o2, o3, o4];
+    var new_el = [n1, n2, n3, n4];
+
+
+    // first we leave everything to input
+    var res = [n1, n2, n3, n4];
+
+    if (tracingInitial)
+        return [n1, n2, n3, n4];
+
+    var do1o2 = List.projectiveDistMinScal(o1, o2);
+    var do1o3 = List.projectiveDistMinScal(o1, o3);
+    var do1o4 = List.projectiveDistMinScal(o1, o4);
+
+    var do2o3 = List.projectiveDistMinScal(o2, o3);
+    var do2o4 = List.projectiveDistMinScal(o2, o4);
+
+    var do3o4 = List.projectiveDistMinScal(o3, o4);
+
+    var swapel = function(a, b){
+        var h = a;
+        a = b;
+        b = h;
+    }
+
+    var perm = [0, 1, 2, 3];
+    var d0, d1, d2, d3;
+    var dsum = 0;
+
+    // reorder elements 
+    var val, dist, min_dist = Infinity, idx, tmp;
+    for(var i = 0; i < 4; i++){
+        for(k = i; k < 4; k++){
+            dist = List.projectiveDistMinScal(old_el[i], new_el[k]);
+            if(dist < min_dist){
+                idx = k;
+                min_dist = dist;
+            }
+
+        }
+        // swap elements if necessary
+        if(idx !== i){
+            tmp = res[i];
+            res[i] = res[idx];
+            res[idx] = tmp;
+        }
+        dsum += min_dist;
+        min_dist = Infinity;
+    }
+
+
+//    var do1n1 = List.projectiveDistMinScal(o1, n1);
+//    var do1n2 = List.projectiveDistMinScal(o1, n2);
+//    var do2n1 = List.projectiveDistMinScal(o2, n1);
+//    var do2n2 = List.projectiveDistMinScal(o2, n2);
+//    var do1o2 = List.projectiveDistMinScal(o1, o2);
+//    var dn1n2 = List.projectiveDistMinScal(n1, n2);
+}
+
+//abstract public class Tracing4Algorithm
+//        extends AbstractAlgorithm {
+//
+//    public Vec[] out = {new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0)};
+//    public Vec[] p = new Vec[4];
+//    public Vec[] check = {new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0), new Vec(0, 0, 0)};
+//
+//    public int[] perm = {0, 1, 2, 3};
+//    private Int too_close01 = new Int();
+//    private Int too_close02 = new Int();
+//    private Int too_close03 = new Int();
+//    private Int too_close12 = new Int();
+//    private Int too_close13 = new Int();
+//    private Int too_close23 = new Int();
+//
+//    double dsum;
+//
+//    final static double security = 3.0;
+//
+//    public void reset() {
+//        too_close01.i = OK;
+//        too_close02.i = OK;
+//        too_close03.i = OK;
+//        too_close12.i = OK;
+//        too_close13.i = OK;
+//        too_close23.i = OK;
+//        //cat.debug(this+"  reset  too_close" +too_close);
+//    }
+//
+//    public int trace() {
+//
+//        double dist, d0, d1, d2, d3;
+//        double lastDist;
+//        int h;
+//
+//        // zunächst ordnen wir irgendwie zu
+//
+//        double do0o1 = check[0].projectiveDistMinScal(check[1]);
+//        double do0o2 = check[0].projectiveDistMinScal(check[2]);
+//        double do0o3 = check[0].projectiveDistMinScal(check[3]);
+//        double do1o2 = check[1].projectiveDistMinScal(check[2]);
+//        double do1o3 = check[1].projectiveDistMinScal(check[3]);
+//        double do2o3 = check[2].projectiveDistMinScal(check[3]);
+//
+//        perm[0] = 0;
+//        perm[1] = 1;
+//        perm[2] = 2;
+//        perm[3] = 3;
+//
+//        d0 = check[0].projectiveDistMinScal(out[0]);
+//        d1 = check[0].projectiveDistMinScal(out[1]);
+//        d2 = check[0].projectiveDistMinScal(out[2]);
+//        d3 = check[0].projectiveDistMinScal(out[3]);
+//
+//        //cat.debug("======================================================================");
+//        //cat.debug(d0+" "+d1+" "+d2+" "+d3);
+//        if (d1 <= d0 && d1 <= d2 && d1 <= d3) {
+//            h = perm[0];
+//            perm[0] = perm[1];
+//            perm[1] = h;
+//            dsum = d1;
+//        } else if (d2 <= d0 && d2 <= d1 && d2 <= d3) {
+//            h = perm[0];
+//            perm[0] = perm[2];
+//            perm[2] = h;
+//            dsum = d2;
+//        } else if (d3 <= d0 && d3 <= d1 && d3 <= d2) {
+//            h = perm[0];
+//            perm[0] = perm[3];
+//            perm[3] = h;
+//            dsum = d3;
+//        } else
+//            dsum = d0;
+//
+//        d1 = check[1].projectiveDistMinScal(out[perm[1]]);
+//        d2 = check[1].projectiveDistMinScal(out[perm[2]]);
+//        d3 = check[1].projectiveDistMinScal(out[perm[3]]);
+//        //cat.debug(d1+" "+d2+" "+d3);
+//
+//        if (d2 <= d1 && d2 <= d3) {
+//            h = perm[1];
+//            perm[1] = perm[2];
+//            perm[2] = h;
+//            dsum += d2;
+//        } else if (d3 <= d1 && d3 <= d2) {
+//            h = perm[1];
+//            perm[1] = perm[3];
+//            perm[3] = h;
+//            dsum += d3;
+//        } else
+//            dsum += d1;
+//
+//        d2 = check[2].projectiveDistMinScal(out[perm[2]]);
+//        d3 = check[2].projectiveDistMinScal(out[perm[3]]);
+//        //cat.debug(d2+" "+d3);
+//
+//        if (d3 <= d2) {
+//            h = perm[2];
+//            perm[2] = perm[3];
+//            perm[3] = h;
+//            dsum += d3;
+//        } else
+//            dsum += d2;
+//
+//        d3 = check[3].projectiveDistMinScal(out[perm[3]]);
+//        //cat.debug(d3);
+//        dsum += d3;
+//
+//        p[0] = out[perm[0]];
+//        p[1] = out[perm[1]];
+//        p[2] = out[perm[2]];
+//        p[3] = out[perm[3]];
+//        ((PGFlat) output[0]).coord.assign(p[0]);
+//        ((PGFlat) output[1]).coord.assign(p[1]);
+//        ((PGFlat) output[2]).coord.assign(p[2]);
+//        ((PGFlat) output[3]).coord.assign(p[3]);
+//        boolean tooClose = false;
+//
+//        double dn0n1 = p[0].projectiveDistMinScal(p[1]);
+//        if (do0o1 > 0.001 && dn0n1 < 0.001) too_close01.i = INVALID;
+//        double dn0n2 = p[0].projectiveDistMinScal(p[2]);
+//        if (do0o2 > 0.001 && dn0n2 < 0.001) too_close02.i = INVALID;
+//        double dn0n3 = p[0].projectiveDistMinScal(p[3]);
+//        if (do0o3 > 0.001 && dn0n3 < 0.001) too_close03.i = INVALID;
+//        double dn1n2 = p[1].projectiveDistMinScal(p[2]);
+//        if (do1o2 > 0.001 && dn1n2 < 0.001) too_close12.i = INVALID;
+//        double dn1n3 = p[1].projectiveDistMinScal(p[3]);
+//        if (do1o3 > 0.001 && dn1n3 < 0.001) too_close13.i = INVALID;
+//        double dn2n3 = p[2].projectiveDistMinScal(p[3]);
+//        if (do2o3 > 0.001 && dn2n3 < 0.001) too_close23.i = INVALID;
+//
+//        //TOO_CLOSE ABGEARBEITET !!!
+//
+//        lastDist = 1000;
+//
+//        if (do0o1 > 0.001 && too_close01.i == OK) {
+//            dist = p[0].projectiveDistMinScal(p[1]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//        if (do0o2 > 0.001 && too_close02.i == OK) {
+//            dist = p[0].projectiveDistMinScal(p[2]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//        if (do0o3 > 0.001 && too_close03.i == OK) {
+//            dist = p[0].projectiveDistMinScal(p[3]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//        if (do1o2 > 0.001 && too_close12.i == OK) {
+//            dist = p[1].projectiveDistMinScal(p[2]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//        if (do1o3 > 0.001 && too_close13.i == OK) {
+//            dist = p[1].projectiveDistMinScal(p[3]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//        if (do2o3 > 0.001 && too_close23.i == OK) {
+//            dist = p[2].projectiveDistMinScal(p[3]);
+//            lastDist = (lastDist < dist ? lastDist : dist);
+//        }
+//
+//        if (lastDist / security > dsum) {
+//            return OK | too_close01.i
+//                    | too_close02.i
+//                    | too_close03.i
+//                    | too_close12.i
+//                    | too_close13.i
+//                    | too_close23.i;
+//        }
+//
+//        return DECREASE_STEP | too_close01.i
+//                | too_close02.i
+//                | too_close03.i
+//                | too_close12.i
+//                | too_close13.i
+//                | too_close23.i;
+//    }
+//
+//    public void setCheckpointsToTraced() {
+//        check[0].assign(((PGFlat) output[0]).coord);
+//        check[1].assign(((PGFlat) output[1]).coord);
+//        check[2].assign(((PGFlat) output[2]).coord);
+//        check[3].assign(((PGFlat) output[3]).coord);
+//    }
+//
+//    public void setCheckpointsToCurrent() {
+//        check[0].assign(((PGFlat) output[0]).coord);
+//        check[1].assign(((PGFlat) output[1]).coord);
+//        check[2].assign(((PGFlat) output[2]).coord);
+//        check[3].assign(((PGFlat) output[3]).coord);
+//    }
+//
+//    public void register(Register register, UndoRegister undoRegister) {
+//        super.register(register, undoRegister);
+//        register.register(too_close01);
+//        register.register(too_close02);
+//        register.register(too_close03);
+//        register.register(too_close12);
+//        register.register(too_close13);
+//        register.register(too_close23);
+//        register.register(check[0]);
+//        register.register(check[1]);
+//        register.register(check[2]);
+//        register.register(check[3]);
+//        undoRegister.register(too_close01);
+//        undoRegister.register(too_close02);
+//        undoRegister.register(too_close03);
+//        undoRegister.register(too_close12);
+//        undoRegister.register(too_close13);
+//        undoRegister.register(too_close23);
+//        undoRegister.register(check[0]);
+//        undoRegister.register(check[1]);
+//        undoRegister.register(check[2]);
+//        undoRegister.register(check[3]);
+//    }
+//
+//    public void unregister(Register register, UndoRegister undoRegister) {
+//        super.unregister(register, undoRegister);
+//        undoRegister.unregister(too_close01);
+//        undoRegister.unregister(too_close02);
+//        undoRegister.unregister(too_close03);
+//        undoRegister.unregister(too_close12);
+//        undoRegister.unregister(too_close13);
+//        undoRegister.unregister(too_close23);
+//        undoRegister.unregister(check[0]);
+//        undoRegister.unregister(check[1]);
+//        undoRegister.unregister(check[2]);
+//        undoRegister.unregister(check[3]);
+//    }
+//
+//    public int needsTrace() {
+//        return YES;
+//    }
+//
+//}
+
 function tracing2core(n1, n2, o1, o2) {
     var safety = 3;
 
