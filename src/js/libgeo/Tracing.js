@@ -322,8 +322,8 @@ function tracing4(n1, n2, n3, n4) {
 tracing4.stateSize = 24; // four three-element complex vectors
 
 function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
-    var debug = function() {};
-    //   var debug = console.log.bind(console);
+    //var debug = function() {};
+       var debug = console.log.bind(console);
     var safety = 3;
 
     var old_el = [o1, o2, o3, o4];
