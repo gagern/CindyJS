@@ -1128,8 +1128,10 @@ geoOps.IntersectConicConic.updatePosition = function(el) {
     var BB = csgeo.csnames[(el.args[1])].matrix;
 
     var erg = geoOps._helper.IntersectConicConic(AA, BB);
-    el.results = List.turnIntoCSList(erg);
+    erg = tracing4(erg[0], erg[1], erg[2], erg[3]);
+    el.results = erg; //List.turnIntoCSList(erg);
 };
+geoOps.IntersectConicConic.tracingStateSize = tracing4.stateSize;
 
 
 geoOps.SelectP = {};

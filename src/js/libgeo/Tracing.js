@@ -310,6 +310,7 @@ function tracing4(n1, n2, n3, n4) {
     var o2 = getStateComplexVector(3);
     var o3 = getStateComplexVector(3);
     var o4 = getStateComplexVector(3);
+
     var res = tracing4core(n1, n2, n3, n4, o1, o2, o3, o4);
 
     putStateComplexVector(res[0]);
@@ -318,11 +319,24 @@ function tracing4(n1, n2, n3, n4) {
     putStateComplexVector(res[3]);
     return List.turnIntoCSList(res);
 }
+tracing4.stateSize = 24; // four three-element complex vectors
 
 function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
-    //var debug = function() {};
-    var debug = console.log.bind(console);
+    var debug = function() {};
+//   var debug = console.log.bind(console);
     var safety = 3;
+
+ //   List.println(o1);
+ //   List.println(o2);
+ //   List.println(o3);
+ //   List.println(o4);
+
+ //   console.log("====");
+ //   List.println(n1);
+ //   List.println(n2);
+ //   List.println(n3);
+ //   List.println(n4);
+ //   console.log("====");
 
     var old_el = [o1, o2, o3, o4];
     var new_el = [n1, n2, n3, n4];
@@ -342,7 +356,11 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     var dsum = 0; // record total costs
     for(var i = 0; i < 4; i++){
         for(var k = i; k < 4; k++){
-            dist = List.projectiveDistMinScal(old_el[i], new_el[k]);
+            dist = List.projectiveDistMinScal(old_el[i], res[k]);
+//            dist = List.abs(List.sub(List.normalizeZ(old_el[i]),  List.normalizeZ(new_el[k]))).value.real;
+           // List.println(old_el[i]);
+           // List.println(new_el[k]);
+           // console.log(dist);
             if(dist < min_dist){
                 idx = k;
                 min_dist = dist;
@@ -357,6 +375,7 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         }
         dsum += min_dist;
         dist_old_new[i] = min_dist;
+        //console.log(min_dist);
         min_dist = Infinity;
     }
 
@@ -372,8 +391,8 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
 //    var new_dists = zero_arr;
     var odist, ndist, diff, match_cost;
     var need_refine = false;
-    for(var i = 0; i < 4; i++){
-        if (List._helper.isNaN(new_el[i])) { 
+    for(var ii = 0; ii < 4; ii++){
+        if (List._helper.isNaN(new_el[ii])) { 
             // Something went very wrong, numerically speaking. We have no
             // clue whether refining will make things any better, so we
             // assume it won't and give up.
@@ -381,44 +400,50 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
             tracingFailed = true;
             break;
         }
-            for(var j = i; j < 4; j++){
-            if(i === j) continue;
-                match_cost = dist_old_new[i];
+            for(var jj = ii; jj < 4; jj++){
+            if(ii === jj) continue;
+                match_cost = dist_old_new[ii];
                 match_cost *= safety;
+                debug("match_cost", match_cost);
 
-                odist = List.projectiveDistMinScal(old_el[i], old_el[j]); // this is do1o2...
-                ndist = List.projectiveDistMinScal(new_el[i], new_el[j]); // this is dn1n2...
+                //console.log(old_el[i], new_el[i]);
+                odist = List.projectiveDistMinScal(old_el[ii], old_el[jj]); // this is do1o2...
+                ndist = List.projectiveDistMinScal(new_el[ii], new_el[jj]); // this is dn1n2...
+                //debug("odist", odist);
+                //debug("ndist", ndist);
                             
                     if (odist > match_cost && ndist > match_cost) {
                         // Distance within matching considerably smaller than distance
                         // across matching, so we could probably match correctly.
-                        debug("Normal case, everything all right.");
+//                        debug("Normal case, everything all right.");
                     } else if (ndist < 1e-5) {
                         // New points too close: we presumably are inside a singularity.
                         if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
                             // The last "good" position was already singular.
                             // Nothing we can do about this.
-                            debug("Staying inside singularity.");
+ //                           debug("Staying inside singularity.");
                         } else {
                             // We newly moved into the singularity. New position is
                             // not "good", but refining won't help since the endpoint
                             // is singular.
-                            debug("Moved into singularity.");
+  //                          debug("Moved into singularity.");
                             tracingFailed = true;
                         }
                     } else if (odist < 1e-5) { // Cinderella uses the constant 1e-6 here
                         // We just moved out of a singularity. Things can only get
                         // better. If the singular situation was "good", we stay
                         // "good", and keep track of things from now on.
-                        debug("Moved out of singularity.");
+   //                     debug("Moved out of singularity.");
                     } else {
+                        //console.log(odist, ndist, match_cost);
                         // Neither old nor new position looks singular, so there was
                         // an avoidable singularity along the way. Refine to avoid it.
                         if (noMoreRefinements)
                             debug("Reached refinement limit, giving up.");
-                        else
+                        else{
                             debug("Need to refine.");
                         need_refine = true;
+                        }
                     }
         } // end j for
     } // end i for
@@ -426,6 +451,7 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     if(need_refine) requestRefinement();
     return res;
 
+}
 
 
 //    if (List._helper.isNaN(n1) || List._helper.isNaN(n2) List._helper.isNaN(n3) || List._helper.isNaN(n4)) {
@@ -478,7 +504,6 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
 //    var do2n2 = List.projectiveDistMinScal(o2, n2);
 //    var do1o2 = List.projectiveDistMinScal(o1, o2);
 //    var dn1n2 = List.projectiveDistMinScal(n1, n2);
-}
 
 //abstract public class Tracing4Algorithm
 //        extends AbstractAlgorithm {
@@ -799,7 +824,7 @@ function tracing2core(n1, n2, o1, o2) {
     }
     return res;
 }
-tracing2.stateSize = 12; // two three-element complex vectors
+tracing2.stateSize = 12; // four three-element complex vectors
 
 function tracing2X(n1, n2, c1, c2, el) {
     var OK = 0;
