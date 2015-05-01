@@ -1130,6 +1130,7 @@ geoOps.IntersectConicConic.updatePosition = function(el) {
     var erg = geoOps._helper.IntersectConicConic(AA, BB);
     erg = tracing4(erg[0], erg[1], erg[2], erg[3]);
     el.results = erg; //List.turnIntoCSList(erg);
+//    el.results = List.turnIntoCSList(erg);
 };
 geoOps.IntersectConicConic.tracingStateSize = tracing4.stateSize;
 
