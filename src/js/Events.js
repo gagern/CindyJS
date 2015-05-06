@@ -273,7 +273,13 @@ function doit() { //Callback for d3-timer
     if (csanimating) {
         cs_tick();
     }
+    // try catch makes d3 timer more robust
+    try{
     updateCindy();
+    }
+    catch(err){
+        console.error(err);
+    }
     csticking = csanimating || mouse.down;
     return !csticking;
 }

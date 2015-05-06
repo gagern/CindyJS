@@ -214,7 +214,8 @@ CSNumber.inv = function(a) {
     // perhaps we should not only check for 0
     // if(Math.abs(s) < 1e32) {
     if (s === 0) {
-        console.error("DIVISION BY ZERO");
+        console.log("DIVISION BY ZERO");
+        return CSNumber.real(Infinity);
         //        halt=immediately;
 
     }
@@ -229,6 +230,8 @@ CSNumber.inv = function(a) {
 
 
 CSNumber.div = function(a, b) {
+    if(CSNumber._helper.isZero(a) && CSNumber._helper.isZero(b)) return nada; // this makes absolutely no sense
+    if(CSNumber._helper.isZero(b)) return CSNumber.real(Infinity);
     return CSNumber.mult(a, CSNumber.inv(b));
 };
 
