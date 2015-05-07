@@ -332,8 +332,11 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     // this is debug code remove later
 //    var isnotOk = false;
 //    for(var kk = 0; kk < 4; kk++){
-//        if(List._helper.isNaN(old_el[kk] || List._helper.isNaN(new_el[kk])))
-//            return old_el;
+//        var num = List.normalizeZ(new_el[kk]);
+//        var ii1 = num.value[0].value.imag;
+//        var ii2 = num.value[1].value.imag;
+//        //if(imagg > 0) console.log(imag);
+//        console.log(ii1, ii2);
 //    }
 
     // first we leave everything to input
@@ -368,6 +371,11 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         min_dist = Infinity;
     }
 
+//    console.log("dists");
+//    for(var kk = 0; kk < 4; kk++){
+//        console.log(List.projectiveDistMinScal(res[kk], old_el[kk]));
+//    }
+
     // assume now we have machting between res and old_el
 
     var odist, ndist, diff, match_cost;
@@ -383,11 +391,12 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         }
         for (var jj = ii; jj < 4; jj++) {
             if (ii === jj) continue;
-            match_cost = dist_old_new[ii];
+            if(tracingFailed) break;
+            match_cost = dist_old_new[ii]; // stimmt das hier?
             match_cost *= safety;
 
             odist = List.projectiveDistMinScal(old_el[ii], old_el[jj]); // this is do1o2...
-            ndist = List.projectiveDistMinScal(new_el[ii], new_el[jj]); // this is dn1n2...
+            ndist = List.projectiveDistMinScal(res[ii], res[jj]); // this is dn1n2...
 
             if (odist > match_cost && ndist > match_cost) {
                 // Distance within matching considerably smaller than distance
@@ -424,7 +433,7 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         }
     }
 
-    if (need_refine) requestRefinement();
+    //if (need_refine) requestRefinement();
     return res;
 
 }
