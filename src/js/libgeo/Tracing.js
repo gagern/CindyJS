@@ -322,22 +322,12 @@ function tracing4(n1, n2, n3, n4) {
 tracing4.stateSize = 24; // four three-element complex vectors
 
 function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
-    //var debug = function() {};
-    var debug = console.log.bind(console);
+    var debug = function() {};
+    //var debug = console.log.bind(console);
     var safety = 3;
 
     var old_el = [o1, o2, o3, o4];
     var new_el = [n1, n2, n3, n4];
-
-    // this is debug code remove later
-//    var isnotOk = false;
-//    for(var kk = 0; kk < 4; kk++){
-//        var num = List.normalizeZ(new_el[kk]);
-//        var ii1 = num.value[0].value.imag;
-//        var ii2 = num.value[1].value.imag;
-//        //if(imagg > 0) console.log(imag);
-//        console.log(ii1, ii2);
-//    }
 
     // first we leave everything to input
     var res = [n1, n2, n3, n4];
@@ -345,7 +335,7 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
     if (tracingInitial)
         return res;
 
-    var dist_old_new = []; // this will hold old to new points matching distance o1n1, o2n3 ... after matching
+    var dist_old_new = new Array(4); // this will hold old to new points matching distance o1n1, o2n3 ... after matching
 
     // reorder elements -- could be easily generelized
     var dist, min_dist = Infinity,
@@ -371,13 +361,7 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         min_dist = Infinity;
     }
 
-//    console.log("dists");
-//    for(var kk = 0; kk < 4; kk++){
-//        console.log(List.projectiveDistMinScal(res[kk], old_el[kk]));
-//    }
-
     // assume now we have machting between res and old_el
-
     var odist, ndist, diff, match_cost;
     var need_refine = false;
     for (var ii = 0; ii < 4; ii++) {
@@ -389,10 +373,9 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
             tracingFailed = true;
             break;
         }
-        for (var jj = ii; jj < 4; jj++) {
-            if (ii === jj) continue;
+        for (var jj = ii+1; jj < 4; jj++) {
             if(tracingFailed) break;
-            match_cost = dist_old_new[ii]; // stimmt das hier?
+            match_cost = dist_old_new[ii];
             match_cost *= safety;
 
             odist = List.projectiveDistMinScal(old_el[ii], old_el[jj]); // this is do1o2...
@@ -423,8 +406,9 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
                 //console.log(odist, ndist, match_cost);
                 // Neither old nor new position looks singular, so there was
                 // an avoidable singularity along the way. Refine to avoid it.
-                if (noMoreRefinements)
+                if (noMoreRefinements){
                     debug("Reached refinement limit, giving up.");
+                }
                 else {
                     debug("Need to refine.");
                     need_refine = true;
@@ -433,7 +417,10 @@ function tracing4core(n1, n2, n3, n4, o1, o2, o3, o4) {
         }
     }
 
-    //if (need_refine) requestRefinement();
+    if (need_refine && !noMoreRefinements)
+        { 
+            requestRefinement();
+        }
     return res;
 
 }
