@@ -161,6 +161,7 @@ function trace() {
         var dt = 0.5 / (1 + t2);
         var tc = CSNumber.complex((2 * t) * dt + 0.5, (1 - t2) * dt);
         noMoreRefinements = (last + 0.5 * step <= last);
+//        noMoreRefinements = step < 1e-6;
         try {
             stateInIdx = stateOutIdx = mover.stateIdx;
             mover.param =
