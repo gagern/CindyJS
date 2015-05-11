@@ -126,7 +126,7 @@ function defaultParameterPath(el, tr, tc, src, dst) {
     return General.add(src, General.mult(tc, General.sub(dst, src)));
 }
 
-// var traceLimit = 100;
+var tracingMaxSteps = 100;
 
 function trace() {
     var mover = move.mover;
@@ -137,11 +137,15 @@ function trace() {
     var opMover = geoOps[mover.type];
     var parameterPath = opMover.parameterPath || defaultParameterPath;
     stateRevertToGood();
+    var traceSteps = 0;
     var lastGoodParam = move.lastGoodParam;
     var targetParam = opMover.computeParametersOnInput(mover, lastGoodParam);
-    var t = last + step;
     tracingFailed = false;
     while (last !== t) {
+        if (traceSteps > tracingMaxSteps && step < 0.25)
+            step = 0.25;
+        var t = last + step;
+        if (t >= 1) t = 1;
         if (traceLog) {
             traceLogRow = [];
             traceLog.push(traceLogRow);
@@ -160,8 +164,8 @@ function trace() {
         var t2 = t * t;
         var dt = 0.5 / (1 + t2);
         var tc = CSNumber.complex((2 * t) * dt + 0.5, (1 - t2) * dt);
-        noMoreRefinements = (last + 0.5 * step <= last);
-//        noMoreRefinements = step < 1e-6;
+        noMoreRefinements =
+            (traceSteps > tracingMaxSteps || last + 0.5 * step <= last);
         try {
             stateInIdx = stateOutIdx = mover.stateIdx;
             mover.param =
@@ -178,21 +182,11 @@ function trace() {
             }
             last = t; // successfully traced up to t
             step *= 1.25;
-            t += step;
-            if (t >= 1) t = 1;
             stateSwapBad(); // may become good if we complete without failing
         } catch (e) {
             if (e !== RefineException)
                 throw e;
             step *= 0.5; // reduce step size
-            t = last + step;
-            /*
-            if (traceLimit === 0) {
-                tracingFailed = true;
-                break;
-            }
-            --traceLimit;
-            */
         }
     }
     if (!tracingFailed) {
