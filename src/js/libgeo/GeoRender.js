@@ -13,7 +13,7 @@ function render() {
             color: col,
             alpha: el.alpha
         });
-        if (el.labeled) {
+        if (el.labeled && !el.tmp) {
             var lbl = el.printname || el.name || "P";
             var lpos = el.labelpos || {
                 'x': 3,

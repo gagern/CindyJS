@@ -189,6 +189,7 @@ function lineDefault(el) {
     if (el.overhang === undefined)
         el.overhang = defaultAppearance.overhangLine;
     el.overhang = CSNumber.real(el.overhang);
+    if (typeof el.tmp === "undefined") el.tmp = false;
 }
 
 function segmentDefault(el) {
@@ -197,6 +198,7 @@ function segmentDefault(el) {
     if (el.overhang === undefined)
         el.overhang = defaultAppearance.overhangSeg;
     el.overhang = CSNumber.real(el.overhang);
+    if (typeof el.tmp === "undefined") el.tmp = false;
 }
 
 // TODO: Use this in csinit to avoid code duplication
@@ -279,6 +281,63 @@ function addElement(el) {
 
     geoDependantsCache = {};
     //guessIncidences();
+
+    return csgeo.csnames[el.name];
+}
+
+// TODO Remove dependencies also
+function removeElement(name) {
+    console.log("Remove element " + name);
+
+    // TODO Check if name exists
+    delete csgeo.csnames[name];
+
+    for (var i = 0; i < csgeo.gslp.length; i++) {
+        var el = csgeo.gslp[i];
+
+        if (el.name === name) {
+            console.log("Removed element from gslp " + name);
+            csgeo.gslp.splice(i, 1);
+        }
+    }
+
+    for (var i = 0; i < csgeo.free.length; i++) {
+        var el = csgeo.free[i];
+
+        if (el.name === name) {
+            console.log("Removed element from free " + name);
+            csgeo.free.splice(i, 1);
+        }
+    }
+
+    for (var i = 0; i < csgeo.points.length; i++) {
+        var el = csgeo.points[i];
+
+        if (el.name === name) {
+            console.log("Removed element from points " + name);
+            csgeo.points.splice(i, 1);
+        }
+    }
+
+    for (var i = 0; i < csgeo.lines.length; i++) {
+        var el = csgeo.lines[i];
+
+        if (el.name === name) {
+            console.log("Removed element from lines " + name);
+            csgeo.lines.splice(i, 1);
+        }
+    }
+
+    for (var i = 0; i < csgeo.conics.length; i++) {
+        var el = csgeo.conics[i];
+
+        if (el.name === name) {
+            console.log("Removed element from conics " + name);
+            csgeo.conics.splice(i, 1);
+        }
+    }
+
+    geoDependantsCache = {};
 }
 
 function onSegment(p, s) { //TODO was ist mit Fernpunkten
