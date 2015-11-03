@@ -54,10 +54,12 @@ function csinit(gslp) {
     csgeo.lines = [];
     csgeo.conics = [];
     csgeo.free = [];
+    csgeo.text = [];
     var ctp = 0;
     var ctf = 0;
     var ctl = 0;
     var ctc = 0;
+    var ctt = 0;
     var dropped = {};
 
     // Das ist für alle gleich
@@ -97,6 +99,7 @@ function csinit(gslp) {
                 continue;
             }
         }
+
         el.kind = op.kind;
         el.stateIdx = totalStateSize;
         totalStateSize += op.stateSize;
@@ -127,6 +130,11 @@ function csinit(gslp) {
             csgeo.lines[ctl] = el;
             segmentDefault(el);
             ctl += 1;
+        }
+        if (el.kind === "T") {
+            csgeo.text[ctt] = el;
+            textDefault(el);
+            ctt += 1;
         }
     }
     stateLastGood = stateIn = stateOut = new Float64Array(totalStateSize);
@@ -197,6 +205,10 @@ function segmentDefault(el) {
     if (el.overhang === undefined)
         el.overhang = defaultAppearance.overhangSeg;
     el.overhang = CSNumber.real(el.overhang);
+}
+
+function textDefault(el) {
+    // TODO
 }
 
 // TODO: Use this in csinit to avoid code duplication
