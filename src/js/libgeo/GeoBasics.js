@@ -177,7 +177,7 @@ function pointDefault(el) {
     if (el.alpha === undefined) el.alpha = defaultAppearance.alpha;
     el.alpha = CSNumber.real(el.alpha);
 
-    if (el.trace) {
+    if (el.trace || el.drawtrace) {
         el._traces = [];
         el._traces_tick = 0;
 

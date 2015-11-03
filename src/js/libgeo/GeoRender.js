@@ -159,7 +159,7 @@ function draw_traces() {
     for (var i = 0; i < csgeo.points.length; i++) {
         var el = csgeo.points[i];
 
-        if (el.trace) {
+        if (el.trace || el.drawtrace) {
             if (el._traces_tick % el.traceskip === 0) {
                 el._traces.push(el.homog);
             }
