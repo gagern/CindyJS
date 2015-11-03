@@ -199,6 +199,88 @@ function segmentDefault(el) {
     el.overhang = CSNumber.real(el.overhang);
 }
 
+// TODO: Use this in csinit to avoid code duplication
+function addElement(el) {
+    console.log(el.name);
+
+    if (csgeo.csnames[el.name] !== undefined) {
+        console.log("Element name '" + el.name + "' already exists");
+
+        // TODO Update position of existing element does not work :-(
+        var existingEl = csgeo.csnames[el.name];
+        existingEl.pos = el.pos;
+
+        stateContinueFromHere();
+        updateCindy();
+
+        return {
+            'ctype': 'geo',
+            'value': existingEl
+        };
+    }
+
+    csgeo.gslp.push(el);
+    csgeo.csnames[el.name] = el;
+    var totalStateSize = stateLastGood.length;
+    var op = geoOps[el.type];
+    el.kind = op.kind;
+    el.stateIdx = totalStateSize;
+    totalStateSize += op.stateSize;
+    el.incidences = [];
+    el.isshowing = true;
+    el.movable = false;
+
+    if (op.isMovable) {
+        el.movable = true;
+        csgeo.free.push(el);
+    }
+
+    if (el.kind === "P") {
+        csgeo.points.push(el);
+        pointDefault(el);
+    }
+    if (el.kind === "L") {
+        csgeo.lines.push(el);
+        lineDefault(el);
+    }
+    if (el.kind === "C") {
+        csgeo.conics.push(el);
+        lineDefault(el);
+    }
+    if (el.kind === "S") {
+        csgeo.lines.push(el);
+        segmentDefault(el);
+    }
+
+    if (true || op.stateSize !== 0) {
+        var prevState = stateLastGood;
+        stateLastGood = stateIn = stateOut = new Float64Array(totalStateSize);
+        stateLastGood.set(prevState); // make new state a copy of old state
+        // initially, stateIn and stateOut are the same, so that initialize can
+        // write some state and updatePosition can immediately use it
+        if (op.initialize) {
+            tracingInitial = true;
+            stateInIdx = stateOutIdx = el.stateIdx;
+            el.param = op.initialize(el);
+            assert(stateOutIdx === el.stateIdx + op.stateSize, "State fully initialized");
+            tracingInitial = false;
+        }
+        stateInIdx = stateOutIdx = el.stateIdx;
+        op.updatePosition(el, false);
+        assert(stateInIdx === el.stateIdx + op.stateSize, "State fully consumed");
+        assert(stateOutIdx === el.stateIdx + op.stateSize, "State fully updated");
+        stateLastGood = new Float64Array(totalStateSize);
+        stateOut = new Float64Array(totalStateSize);
+    } else {
+        // Do the updatePosition call with correct state handling around it.
+    }
+    stateContinueFromHere();
+    isShowing(el, op);
+
+    geoDependantsCache = {};
+    //guessIncidences();
+}
+
 function onSegment(p, s) { //TODO was ist mit Fernpunkten
     // TODO das ist eine sehr teure implementiereung
     // Geht das einfacher?
@@ -283,6 +365,10 @@ function getGeoDependants(mover) {
         }
     }
     geoDependantsCache[mover.name] = deps;
+    /*
+    console.log("getGeoDependants(" + mover.name + ") := [" +
+                deps.map(function(el) { return el.name; }).join(",") + "]");
+    */
     return deps;
 }
 
