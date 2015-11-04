@@ -215,7 +215,7 @@ function isElementAtMouse(element) {
  * @returns {boolean}
  */
 function isPointAtMouse(element) {
-    return isElementAtMouse(element) && (element.mover.type === "Free" || element.mover.type === "Mid");
+    return isElementAtMouse(element) && (element.mover.type === "Free" || element.mover.type === "Mid" || element.mover.type === "PointOnLine");
 }
 
 /**
