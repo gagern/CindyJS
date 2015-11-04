@@ -346,6 +346,18 @@ all: katex
 .PHONY: katex
 
 ######################################################################
+## Copy images to build directory
+######################################################################
+
+images=$(wildcard images/*.png) $(wildcard images/*.jpg)
+
+$(images:%=build/js/%): build/js/%: %
+	@mkdir -p $(@D)
+	cp $< $@
+
+all: $(images:%=build/js/%)
+
+######################################################################
 ## Copy things which constitute a release
 ######################################################################
 
