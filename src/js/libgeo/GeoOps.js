@@ -2435,25 +2435,6 @@ geoOps._helper.initializeLine = function(el) {
     return pos;
 };
 
-geoOps.Text = {};
-geoOps.Text.kind = "T";
-geoOps.Text.signature = [];
-geoOps.Text.initialize = function(el) {
-    if (el.button === true) {
-        var body = document.body;
-        var button = document.createElement("button");
-        button.innerHTML = el.text;
-        button.onclick = function() {
-            evokeCS(el.script);
-        };
-
-        body.appendChild(button);
-    }
-};
-geoOps.Text.updatePosition = function(el) {
-
-};
-
 
 var geoMacros = {};
 
@@ -2581,6 +2562,16 @@ geoMacros.TrReflection = function(el) {
 };
 
 geoMacros.Text = function(el) {
+    if (el.button === true) {
+        var body = document.body;
+        var button = document.createElement("button");
+        button.innerHTML = el.text;
+        button.onclick = function() {
+            evokeCS(el.script);
+        };
+        body.appendChild(button);
+        return [];
+    }
     // Cinderella exports elements this text depends on, like the one this text
     // was docked to, or elements whose coordinates are used in the expansion.
     // Since we don't need to trace Text, and always repaint everything, we
