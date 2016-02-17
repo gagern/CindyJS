@@ -199,6 +199,7 @@ function createCindyNow() {
                 c.style.height = csh + "px";
             csctx.scale(ratio, ratio);
         }
+        csctx = new FakeCanvas(csctx);
     }
 
     csgeo = {};
@@ -254,6 +255,65 @@ function createCindyNow() {
     loadExtraModules();
     doneLoadingModule();
 }
+
+function FakeCanvas(realContext) {
+    this._real = realContext;
+    this._log = [];
+}
+
+FakeCanvas.prototype._dump = function() {
+    console.log(this._log.join("\n"));
+    this._log = [];
+};
+
+[
+    "arc",
+    "beginPath",
+    "clearRect",
+    "clip",
+    "closePath",
+    "fill",
+    "fillText",
+    "getContext",
+    "lineTo",
+    "measureText",
+    "moveTo",
+    "restore",
+    "save",
+    "stroke",
+    "strokeText",
+].forEach(function(m) {
+    FakeCanvas.prototype[m] = function() {
+        var args = Array.prototype.slice.call(arguments);
+        args = JSON.stringify(args);
+        args = args.substring(1, args.length - 1);
+        this._log.push("ctx." + m + "(" + args + ");");
+        return this._real[m].apply(this._real, arguments);
+    };
+});
+
+[
+    "backingStorePixelRatio",
+    "fillStyle",
+    "font",
+    "globalAlpha",
+    "lineCap",
+    "lineJoin",
+    "lineWidth",
+    "miterLimit",
+    "strokeStyle",
+].forEach(function(m) {
+    Object.defineProperty(FakeCanvas.prototype, m, {
+        enumerable: true,
+        configurable: true,
+        get: function() { return this._real[m]; },
+        set: function(v) {
+            var arg = JSON.stringify(v);
+            this._log.push("ctx." + m + " = " + arg + ";");
+            return this._real[m] = v;
+        },
+    });
+});
 
 function loadExtraModules() {
     if (usedFunctions.convexhull3d$1)

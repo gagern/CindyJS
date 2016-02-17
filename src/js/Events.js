@@ -267,6 +267,7 @@ function updateCindy() {
     draw_traces();
     render();
     csctx.restore();
+    if (csctx._dump) csctx._dump();
 }
 
 function update() {

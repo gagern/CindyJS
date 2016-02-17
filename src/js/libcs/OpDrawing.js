@@ -298,7 +298,7 @@ eval_helper.drawcircle = function(args, modifs, df) {
 
     csctx.beginPath();
     csctx.arc(xx, yy, v1.value.real * m.sdet, 0, 2 * Math.PI);
-
+    csctx.closePath();
 
     if (df === "D") {
         csctx.stroke();
@@ -310,6 +310,7 @@ eval_helper.drawcircle = function(args, modifs, df) {
     if (df === "C") {
         csctx.clip();
     }
+    csctx.beginPath();
 
     /* CanvasRenderingContext2D.arc in Chrome is buggy. See #259
      * But drawconic doesn't handle filling, so it's no replacement.
