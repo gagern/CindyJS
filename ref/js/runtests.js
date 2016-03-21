@@ -1,15 +1,65 @@
 "use strict";
 
-var fs = require("fs"), path = require("path");
-var createCindy = require("../../build/js/Cindy.plain.js");
+var fs = require("fs");
+var path = require("path");
+var vm = require("vm");
 
 var refdir = path.dirname(__dirname);
 var println = console.log.bind(console);
+var scriptCache = {};
 var exportJSON = false;
 
 var reTestLine = /^    ([<>!.] )?(.*)/mg;
 var failures = 0, numtests = 0;
-var cjs, fakeCanvas;
+var ctx, cjs, fakeCanvas;
+
+function loadScript(scriptName) {
+  if (!scriptCache.hasOwnProperty(scriptName)) {
+    var src = require.resolve(path.join("../../build/js", scriptName));
+    src = fs.readFileSync(src, "utf-8");
+    scriptCache[scriptName] = new vm.Script(src, {filename: scriptName});
+  }
+  scriptCache[scriptName].runInContext(ctx);
+}
+
+function createSandbox() {
+  var clog = [];
+  var vmconsole = {
+    _log: [],
+    clear: function() {
+      this._log = [];
+    },
+    log: function(str) {
+      this._log.push(str);
+    },
+  };
+  vmconsole.error = vmconsole.log;
+  ctx = vm.createContext({
+    console: vmconsole,
+    document: {
+      createElement: function() {
+        return {
+          appendChild: function() {},
+          style: {}
+        }
+      },
+      createTextNode: function() {
+        return {}
+      },
+    },
+    navigator: {
+      userAgent: "chrome",
+      appName: "Netscape",
+    },
+    process: {
+      nextTick: process.nextTick.bind(process),
+    },
+  });
+  ctx.window = ctx;
+  var scripts = ["Cindy.plain.js"];
+  scripts.forEach(loadScript);
+  return ctx;
+}
 
 function runAllTests(files) {
   if (files.length === 0) {
@@ -35,10 +85,11 @@ function runTestFile(filename) {
   // println("File: " + filename);
   // println("");
   fakeCanvas = new FakeCanvas();
-  cjs = createCindy({
-    "isNode": true,
-    "csconsole": null,
-    "canvas": fakeCanvas,
+  createSandbox();
+  cjs = ctx.createCindy({
+    isNode: true,
+    csconsole: null,
+    canvas: fakeCanvas,
   });
   fakeCanvas._log = [];
   var cases = [], curcase = null, ininput = false, lineno = 1;
@@ -197,11 +248,8 @@ function sanityCheck(val) {
 };
 
 TestCase.prototype.run = function() {
-  var val, actual, expected, clog = [], matches, expstr;
-  var conlog = console.log;
-  var conerr = console.error;
-  console.log = function(str) { clog.push(str); };
-  console.error = console.log;
+  var val, actual, expected, matches, expstr;
+  ctx.console.clear();
   try {
     val = cjs.evalcs(this.cmd);
     sanityCheck(val);
@@ -224,10 +272,7 @@ TestCase.prototype.run = function() {
     println("");
     return false;
   }
-  finally {
-    console.log = conlog;
-    console.error = conerr;
-  }
+  var clog = ctx.console._log;
   if (this.output !== null || clog.length !== 0) {
     expected = this.output;
     if (expected === null) expected = [];
