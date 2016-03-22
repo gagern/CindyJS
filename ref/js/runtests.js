@@ -3,6 +3,7 @@
 var fs = require("fs");
 var path = require("path");
 var vm = require("vm");
+var domino = require("domino");
 
 var refdir = path.dirname(__dirname);
 var println = console.log.bind(console);
@@ -22,6 +23,12 @@ function loadScript(scriptName) {
   scriptCache[scriptName].runInContext(ctx);
 }
 
+function loadScriptViaTag(scriptName) {
+  var elt = ctx.document.createElement("script");
+  elt.src = "js/" + scriptName;
+  ctx.document.body.appendChild(elt);
+}
+
 function createSandbox() {
   var clog = [];
   var vmconsole = {
@@ -34,30 +41,76 @@ function createSandbox() {
     },
   };
   vmconsole.error = vmconsole.log;
-  ctx = vm.createContext({
-    console: vmconsole,
-    document: {
-      createElement: function() {
-        return {
-          appendChild: function() {},
-          style: {}
-        }
-      },
-      createTextNode: function() {
-        return {}
-      },
-    },
-    navigator: {
-      userAgent: "chrome",
-      appName: "Netscape",
-    },
-    process: {
-      nextTick: process.nextTick.bind(process),
-    },
+  var window = domino.createWindow(
+    '<!DOCTYPE html>\n<html><head>' +
+    '<script src="js/Cindy.js" type="text/javascript"></script>' +
+    '</head><body><canvas id="CSCanvas"></canvas></body></html>'
+  );
+  window.location.href = "http://reftest.cindyjs.local/";
+  function mutationHandler(e) {
+    var node = e.node;
+    var tag = node.nodeName.toLowerCase();
+    //console.log(e);
+    if (e.type === 6 && node.nodeType === 1 && tag === "script") {
+      var src = node.getAttribute("src");
+      //console.log(src);
+      src = src.replace(/(^|\/).*js\//, "");
+      //console.log(src);
+      loadScript(src);
+    }
+  }
+  window.document._setMutationHandler(mutationHandler);
+  Object.defineProperty(window, "console", { value: vmconsole });
+  Object.defineProperty(window, "navigator", { value: {
+    get userAgent() { return "Mozilla/" + this.appVersion; },
+    appName: "Netscape",
+    appCodeName: "Mozilla",
+    appVersion: [
+      "5.0 (not really)",
+      "AppleWebKit/537.36 (KHTML, like Gecko)",
+      "Chrome/49.0",
+      "Safari/537.36",
+    ].join(" "),
+    platform: "Node.js",
+  } });
+  var createElement = window.document.createElement;
+  Object.defineProperty(window.document, "createElement", {
+    value: function(localName) {
+      var res = createElement.call(this, localName);
+      if (localName === "iframe" && !res.contentWindow) {
+        res.contentWindow = domino.createWindow('<html><body></body></html>');
+        res.contentDocument = res.contentWindow.document;
+        function nop() {}
+        Object.defineProperties(res.contentDocument, {
+          // Prevent overwriting the document since domino doesn't support this
+          open: { value: nop },
+          write: { value: nop },
+          close: { value: nop },
+        });
+        res.contentDocument._setMutationHandler(mutationHandler);
+      }
+      return res;
+    }
   });
-  ctx.window = ctx;
+  if (!window.document.location)
+    window.document.location = window.location;
+  window.setInterval = function(cb, timeout) {
+    // console.log("setInterval(" + cb + ", " + timeout + ")");
+  };
+  window.setTimeout = function(cb, timeout) {
+    //console.log("setTimeout(" + cb + ", " + timeout + ")");
+    if (!timeout) cb();
+  };
+  window.clearTimeout = function(handle) {
+  };
+  window.nodeconsole = console;
+  window.process = {
+    nextTick: process.nextTick.bind(process),
+  };
+  ctx = vm.createContext(window);
   var scripts = ["Cindy.plain.js"];
   scripts.forEach(loadScript);
+  window.document.close();
   return ctx;
 }
 
@@ -91,6 +144,7 @@ function runTestFile(filename) {
     csconsole: null,
     canvas: fakeCanvas,
   });
+  cjs.startup();
   fakeCanvas._log = [];
   var cases = [], curcase = null, ininput = false, lineno = 1;
   var anythingToCheck = false;
@@ -119,8 +173,13 @@ function runTestFile(filename) {
           ininput = true;
         }
         continue;
-      } else if (mark === "- " && rest.substr(0, 4) == "skip") {
-        break;
+      } else if (mark === "- ") {
+        if (rest.substr(0, 4) == "skip") {
+          break;
+        } else if (rest.substr(0, 5) == "load ") {
+          curcase.loadScript = rest.substr(5);
+        }
+        // ignore other pragmas
       } else if (mark === "< ") {
         curcase.expectResult(rest);
         anythingToCheck = true;
@@ -172,6 +231,7 @@ TestCase.prototype.pattern = null;
 TestCase.prototype.output = null;
 TestCase.prototype.draw = null;
 TestCase.prototype.exception = null;
+TestCase.prototype.loadScript = null;
 
 TestCase.prototype.expectResult = function(str) {
   if (this.expected !== null)
@@ -249,6 +309,7 @@ function sanityCheck(val) {
 
 TestCase.prototype.run = function() {
   var val, actual, expected, matches, expstr;
+  if (this.loadScript) loadScriptViaTag(this.loadScript);
   ctx.console.clear();
   try {
     val = cjs.evalcs(this.cmd);
@@ -293,6 +354,7 @@ TestCase.prototype.run = function() {
       println("Expected:  D " + expected.join("\n           D "));
       println("Actual:    D " + fakeCanvas._log.join("\n           D "));
       println("");
+      fakeCanvas._log = [];
       return false;
     }
     fakeCanvas._log = [];

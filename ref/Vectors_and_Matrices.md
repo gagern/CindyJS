@@ -604,12 +604,13 @@ Each facet is given as the indices of the vertices of the first list.
 **Example:**
 The following list of points describes a three dimensional cube with an additional point in its center.
 
+    - load quickhull3d/quickhull3d.nocache.js
+    > use("quickhull3d"); // Not needed if convexhull3d call is found at load
     > cube = [[1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],
     >         [-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1],[0,0,0]];
 
 Applying the convex hull operator to this list produces the following output:
 
-    - skip test: convexhull module not linked in for unit tests.
     > expected =
     > [
     >  [[1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],

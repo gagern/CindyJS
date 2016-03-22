@@ -473,6 +473,7 @@ if (instanceInvocationArguments.use) {
 // CONSOLE
 //
 function setupConsole() {
+  nodeconsole.log("setupConsole", csconsole);
     if (csconsole === null) {
         csconsole = new NullConsoleHandler();
     } else if (csconsole === true) {
