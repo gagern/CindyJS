@@ -1,15 +1,15 @@
 /**
-  * Copyright John E. Lloyd, 2004. All rights reserved. Permission to use,
-  * copy, modify and redistribute is granted, provided that this copyright
-  * notice is retained and the author is given credit whenever appropriate.
-  *
-  * This  software is distributed "as is", without any warranty, including 
-  * any implied warranty of merchantability or fitness for a particular
-  * use. The author assumes no responsibility for, and shall not be liable
-  * for, any special, indirect, or consequential damages, or any damages
-  * whatsoever, arising out of or in connection with the use of this
-  * software.
-  */
+ * Copyright John E. Lloyd, 2004. All rights reserved. Permission to use,
+ * copy, modify and redistribute is granted, provided that this copyright
+ * notice is retained and the author is given credit whenever appropriate.
+ *
+ * This  software is distributed "as is", without any warranty, including 
+ * any implied warranty of merchantability or fitness for a particular
+ * use. The author assumes no responsibility for, and shall not be liable
+ * for, any special, indirect, or consequential damages, or any damages
+ * whatsoever, arising out of or in connection with the use of this
+ * software.
+ */
 
 /**
  * Computes the convex hull of a set of three dimensional points.
@@ -108,1252 +108,1170 @@
  *
  * @author John E. Lloyd, Fall 2004 */
 
-	/**
-	 * Specifies that (on output) vertex indices for a face should be
-	 * listed in clockwise order.
-	 */
+/**
+ * Specifies that (on output) vertex indices for a face should be
+ * listed in clockwise order.
+ */
 QuickHull3D.CLOCKWISE = 0x1;
 
-	/**
-	 * Specifies that (on output) the vertex indices for a face should be
-	 * numbered starting from 1.
-	 */
+/**
+ * Specifies that (on output) the vertex indices for a face should be
+ * numbered starting from 1.
+ */
 QuickHull3D.INDEXED_FROM_ONE = 0x2;
 
-	/**
-	 * Specifies that (on output) the vertex indices for a face should be
-	 * numbered starting from 0.
-	 */
+/**
+ * Specifies that (on output) the vertex indices for a face should be
+ * numbered starting from 0.
+ */
 QuickHull3D.INDEXED_FROM_ZERO = 0x4;
 
-	/**
-	 * Specifies that (on output) the vertex indices for a face should be
-	 * numbered with respect to the original input points.
-	 */
+/**
+ * Specifies that (on output) the vertex indices for a face should be
+ * numbered with respect to the original input points.
+ */
 QuickHull3D.POINT_RELATIVE = 0x8;
 
-	/**
-	 * Specifies that the distance tolerance should be
-	 * computed automatically from the input point data.
-	 */
+/**
+ * Specifies that the distance tolerance should be
+ * computed automatically from the input point data.
+ */
 QuickHull3D.AUTOMATIC_TOLERANCE = -1;
 
-	/**
-	 * Creates an empty convex hull object.
-	 */
-function QuickHull3D ()
-	 }
+/**
+ * Creates an empty convex hull object.
+ */
+function QuickHull3D()
+}
 
-	/**
-	 * Creates a convex hull object and initializes it to the convex hull
-	 * of a set of points.
-	 *
-	 * @param points input points.
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four, or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-function QuickHull3D (Point3d[] points)
-	 {
-	var findIndex = -1;
+/**
+ * Creates a convex hull object and initializes it to the convex hull
+ * of a set of points.
+ *
+ * @param points input points.
+ * @throws IllegalArgumentException the number of input points is less
+ * than four, or the points appear to be coincident, colinear, or
+ * coplanar.
+ */
+function QuickHull3D(Point3d[] points) {
+    var findIndex = -1;
 
-	// estimated size of the point set
-	var charLength;
+    // estimated size of the point set
+    var charLength;
 
-	var debug = false;
+    var debug = false;
 
-	var pointBuffer = new Vertex[0];
-	var vertexPointIndices = new int[0];
-	var discardedFaces = new Face[3];
+    var pointBuffer = new Vertex[0];
+    var vertexPointIndices = new int[0];
+    var discardedFaces = new Face[3];
 
-	var maxVtxs = new Vertex[3];
-	var minVtxs = new Vertex[3];
+    var maxVtxs = new Vertex[3];
+    var minVtxs = new Vertex[3];
 
-	var faces = new Vector(16);
-	var horizon = new Vector(16);
+    var faces = new Vector(16);
+    var horizon = new Vector(16);
 
-	var newFaces = new FaceList();
-	var unclaimed = new VertexList();
-	var claimed = new VertexList();
+    var newFaces = new FaceList();
+    var unclaimed = new VertexList();
+    var claimed = new VertexList();
 
-	var numVertices;
-	var numFaces;
-	var numPoints;
+    var numVertices;
+    var numFaces;
+    var numPoints;
 
-	var explicitTolerance = AUTOMATIC_TOLERANCE;
-	var tolerance;
+    var explicitTolerance = AUTOMATIC_TOLERANCE;
+    var tolerance;
 
-	   build (points, points.length);
-	 }
+    build(points, points.length);
+}
 
-	/**
-	 * Returns true if debugging is enabled.
-	 *
-	 * @return true is debugging is enabled
-	 * @see QuickHull3D#setDebug
-	 */
-QuickHull3D.prototype.getDebug = function()
-	 {
-	   return debug;
-	 }
+/**
+ * Returns true if debugging is enabled.
+ *
+ * @return true is debugging is enabled
+ * @see QuickHull3D#setDebug
+ */
+QuickHull3D.prototype.getDebug = function() {
+    return debug;
+}
 
-	/**
-	 * Enables the printing of debugging diagnostics.
-	 *
-	 * @param enable if true, enables debugging
-	 */
-QuickHull3D.prototype.setDebug = function (enable)
-	 {
-	   debug = enable;
-	 }
+/**
+ * Enables the printing of debugging diagnostics.
+ *
+ * @param enable if true, enables debugging
+ */
+QuickHull3D.prototype.setDebug = function(enable) {
+    debug = enable;
+}
 
-	/**
-	 * Precision of a double.
-	 */
+/**
+ * Precision of a double.
+ */
 QuickHull3D.DOUBLE_PREC = 2.2204460492503131e-16;
 
 
-	/**
-	 * Returns the distance tolerance that was used for the most recently
-	 * computed hull. The distance tolerance is used to determine when
-	 * faces are unambiguously convex with respect to each other, and when
-	 * points are unambiguously above or below a face plane, in the
-	 * presence of <a href=#distTol>numerical imprecision</a>. Normally,
-	 * this tolerance is computed automatically for each set of input
-	 * points, but it can be set explicitly by the application.
-	 *
-	 * @return distance tolerance
-	 * @see QuickHull3D#setExplicitDistanceTolerance
-	 */
-QuickHull3D.prototype.getDistanceTolerance = function()
-	 {
-	   return tolerance;
-	 }
+/**
+ * Returns the distance tolerance that was used for the most recently
+ * computed hull. The distance tolerance is used to determine when
+ * faces are unambiguously convex with respect to each other, and when
+ * points are unambiguously above or below a face plane, in the
+ * presence of <a href=#distTol>numerical imprecision</a>. Normally,
+ * this tolerance is computed automatically for each set of input
+ * points, but it can be set explicitly by the application.
+ *
+ * @return distance tolerance
+ * @see QuickHull3D#setExplicitDistanceTolerance
+ */
+QuickHull3D.prototype.getDistanceTolerance = function() {
+    return tolerance;
+}
 
-	/**
-	 * Sets an explicit distance tolerance for convexity tests.
-	 * If {@link #AUTOMATIC_TOLERANCE AUTOMATIC_TOLERANCE}
-	 * is specified (the default), then the tolerance will be computed
-	 * automatically from the point data.
-	 *
-	 * @param tol explicit tolerance
-	 * @see #getDistanceTolerance
-	 */
-QuickHull3D.prototype.setExplicitDistanceTolerance = function(tol)
-	 {
-	   explicitTolerance = tol;
-	 }
+/**
+ * Sets an explicit distance tolerance for convexity tests.
+ * If {@link #AUTOMATIC_TOLERANCE AUTOMATIC_TOLERANCE}
+ * is specified (the default), then the tolerance will be computed
+ * automatically from the point data.
+ *
+ * @param tol explicit tolerance
+ * @see #getDistanceTolerance
+ */
+QuickHull3D.prototype.setExplicitDistanceTolerance = function(tol) {
+    explicitTolerance = tol;
+}
 
-	/**
-	 * Returns the explicit distance tolerance.
-	 *
-	 * @return explicit tolerance
-	 * @see #setExplicitDistanceTolerance
-	 */
-QuickHull3D.prototype.getExplicitDistanceTolerance = function()
-	 {
-	   return explicitTolerance;
-	 }
+/**
+ * Returns the explicit distance tolerance.
+ *
+ * @return explicit tolerance
+ * @see #setExplicitDistanceTolerance
+ */
+QuickHull3D.prototype.getExplicitDistanceTolerance = function() {
+    return explicitTolerance;
+}
 
-QuickHull3D.prototype.addPointToFace = function (vtx, face)
-	 {
-	   vtx.face = face;
+QuickHull3D.prototype.addPointToFace = function(vtx, face) {
+    vtx.face = face;
 
-	   if (face.outside == null)
-	    { claimed.add (vtx);
-	    }
-	   else
-	    { claimed.insertBefore (vtx, face.outside);
-	    }
-	   face.outside = vtx;
-	 }
+    if (face.outside == null) {
+        claimed.add(vtx);
+    } else {
+        claimed.insertBefore(vtx, face.outside);
+    }
+    face.outside = vtx;
+}
 
-QuickHull3D.prototype.removePointFromFace = function (vtx, face)
-	 {
-	   if (vtx == face.outside)
-	    { if (vtx.next != null && vtx.next.face == face)
-	       { face.outside = vtx.next;
-	       }
-	      else
-	       { face.outside = null;
-	       }
-	    }
-	   claimed.delete (vtx);
-	 }
+QuickHull3D.prototype.removePointFromFace = function(vtx, face) {
+    if (vtx == face.outside) {
+        if (vtx.next != null && vtx.next.face == face) {
+            face.outside = vtx.next;
+        } else {
+            face.outside = null;
+        }
+    }
+    claimed.delete(vtx);
+}
 
-QuickHull3D.prototype.removeAllPointsFromFace = function (face)
-	 {
-	   if (face.outside != null)
-	    {
-	      var end = face.outside;
-	      while (end.next != null && end.next.face == face)
-	       { end = end.next;
-	       }
-	      claimed.delete (face.outside, end);
-	      end.next = null;
-	      return face.outside;
-	    }
-	   else
-	    { return null;
-	    }
-	 }
+QuickHull3D.prototype.removeAllPointsFromFace = function(face) {
+    if (face.outside != null) {
+        var end = face.outside;
+        while (end.next != null && end.next.face == face) {
+            end = end.next;
+        }
+        claimed.delete(face.outside, end);
+        end.next = null;
+        return face.outside;
+    } else {
+        return null;
+    }
+}
 
-	/**
-	 * Creates a convex hull object and initializes it to the convex hull
-	 * of a set of points whose coordinates are given by an
-	 * array of doubles.
-	 *
-	 * @param coords x, y, and z coordinates of each input
-	 * point. The length of this array will be three times
-	 * the the number of input points.
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four, or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-QuickHull3D.prototype.QuickHull3D = function (coords)
-	 {
-	   build (coords, coords.length/3);
-	 }
+/**
+ * Creates a convex hull object and initializes it to the convex hull
+ * of a set of points whose coordinates are given by an
+ * array of doubles.
+ *
+ * @param coords x, y, and z coordinates of each input
+ * point. The length of this array will be three times
+ * the the number of input points.
+ * @throws IllegalArgumentException the number of input points is less
+ * than four, or the points appear to be coincident, colinear, or
+ * coplanar.
+ */
+QuickHull3D.prototype.QuickHull3D = function(coords) {
+    build(coords, coords.length / 3);
+}
 
-QuickHull3D.prototype.findHalfEdge = function (tail, head)
-	 {
-	   // brute force ... OK, since setHull is not used much
-	   for (var it=faces.iterator(); it.hasNext(); )
-	    { var he = ((Face)it.next()).findEdge (tail, head);
-	      if (he != null)
-	       { return he;
-	       }
-	    }
-	   return null;
-	 }
+QuickHull3D.prototype.findHalfEdge = function(tail, head) {
+    // brute force ... OK, since setHull is not used much
+    for (var it = faces.iterator(); it.hasNext();) {
+        var he = ((Face) it.next()).findEdge(tail, head);
+        if (he != null) {
+            return he;
+        }
+    }
+    return null;
+}
 
-QuickHull3D.prototype.setHull (var coords, var nump,
-				var faceIndices, var numf)
- 	 {
- 	   initBuffers (nump);
-	   setPoints (coords, nump);
-	   computeMaxAndMin ();
-	   for (var i=0; i<numf; i++)
-	    { var face = Face.create (pointBuffer, faceIndices[i]);
-	      var he = face.he0;
-	      do
-	       { var heOpp = findHalfEdge (he.head(), he.tail());
-		 if (heOpp != null)
-		  { he.setOpposite (heOpp);
-		  }
-		 he = he.next;
-	       }
-	      while (he != face.he0);
-	      faces.add (face);
-	    }
- 	 }
+QuickHull3D.prototype.setHull(var coords,
+    var nump,
+        var faceIndices,
+            var numf) {
+    initBuffers(nump);
+    setPoints(coords, nump);
+    computeMaxAndMin();
+    for (var i = 0; i < numf; i++) {
+        var face = Face.create(pointBuffer, faceIndices[i]);
+        var he = face.he0;
+        do {
+            var heOpp = findHalfEdge(he.head(), he.tail());
+            if (heOpp != null) {
+                he.setOpposite(heOpp);
+            }
+            he = he.next;
+        }
+        while (he != face.he0);
+        faces.add(face);
+    }
+}
 
-QuickHull3D.prototype.printPoints = function (ps)
-	 {
-	   for (var i=0; i<numPoints; i++)
-	    { Point3d pnt = pointBuffer[i].pnt;
-	      ps.println (pnt.x + ", " + pnt.y + ", " + pnt.z + ",");
-	    }
-	 }
+QuickHull3D.prototype.printPoints = function(ps) {
+    for (var i = 0; i < numPoints; i++) {
+        Point3d pnt = pointBuffer[i].pnt;
+        ps.println(pnt.x + ", " + pnt.y + ", " + pnt.z + ",");
+    }
+}
 
-	/**
-	 * Constructs the convex hull of a set of points whose
-	 * coordinates are given by an array of doubles.
-	 *
-	 * @param coords x, y, and z coordinates of each input
-	 * point. The length of this array will be three times
-	 * the number of input points.
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four, or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-QuickHull3D.prototype.build = function (coords)
-	 {
-	   build (coords, coords.length/3);
-	 }
+/**
+ * Constructs the convex hull of a set of points whose
+ * coordinates are given by an array of doubles.
+ *
+ * @param coords x, y, and z coordinates of each input
+ * point. The length of this array will be three times
+ * the number of input points.
+ * @throws IllegalArgumentException the number of input points is less
+ * than four, or the points appear to be coincident, colinear, or
+ * coplanar.
+ */
+QuickHull3D.prototype.build = function(coords) {
+    build(coords, coords.length / 3);
+}
 
-	/**
-	 * Constructs the convex hull of a set of points whose
-	 * coordinates are given by an array of doubles.
-	 *
-	 * @param coords x, y, and z coordinates of each input
-	 * point. The length of this array must be at least three times
-	 * <code>nump</code>.
-	 * @param nump number of input points
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four or greater than 1/3 the length of <code>coords</code>,
-	 * or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-QuickHull3D.prototype.build = function (coords, nump)
-	 {
-	   if (nump < 4)
-	    { throw new IllegalArgumentException (
-		 "Less than four input points specified");
-	    }
-	   if (coords.length/3 < nump)
-	    { throw new IllegalArgumentException (
-		 "Coordinate array too small for specified number of points");
-	    }
-	   initBuffers (nump);
-	   setPoints (coords, nump);
-	   buildHull ();
-	 }
+/**
+ * Constructs the convex hull of a set of points whose
+ * coordinates are given by an array of doubles.
+ *
+ * @param coords x, y, and z coordinates of each input
+ * point. The length of this array must be at least three times
+ * <code>nump</code>.
+ * @param nump number of input points
+ * @throws IllegalArgumentException the number of input points is less
+ * than four or greater than 1/3 the length of <code>coords</code>,
+ * or the points appear to be coincident, colinear, or
+ * coplanar.
+ */
+QuickHull3D.prototype.build = function(coords, nump) {
+    if (nump < 4) {
+        throw new IllegalArgumentException(
+            "Less than four input points specified");
+    }
+    if (coords.length / 3 < nump) {
+        throw new IllegalArgumentException(
+            "Coordinate array too small for specified number of points");
+    }
+    initBuffers(nump);
+    setPoints(coords, nump);
+    buildHull();
+}
 
-	/**
-	 * Constructs the convex hull of a set of points.
-	 *
-	 * @param points input points
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four, or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-QuickHull3D.prototype.build = function (points)
-	 {
-	   build (points, points.length);
-	 }
+/**
+ * Constructs the convex hull of a set of points.
+ *
+ * @param points input points
+ * @throws IllegalArgumentException the number of input points is less
+ * than four, or the points appear to be coincident, colinear, or
+ * coplanar.
+ */
+QuickHull3D.prototype.build = function(points) {
+    build(points, points.length);
+}
 
-	/**
-	 * Constructs the convex hull of a set of points.
-	 *
-	 * @param points input points
-	 * @param nump number of input points
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four or greater then the length of <code>points</code>, or the
-	 * points appear to be coincident, colinear, or coplanar.
-	 */
-QuickHull3D.prototype.build = function (points, nump)
-	 {
-	   if (nump < 4)
-	    { throw new IllegalArgumentException (
-		 "Less than four input points specified");
-	    }
-	   if (points.length < nump)
-	    { throw new IllegalArgumentException (
-		 "Point array too small for specified number of points");
-	    }
-	   initBuffers (nump);
-	   setPoints (points, nump);
-	   buildHull ();
-	 }
+/**
+ * Constructs the convex hull of a set of points.
+ *
+ * @param points input points
+ * @param nump number of input points
+ * @throws IllegalArgumentException the number of input points is less
+ * than four or greater then the length of <code>points</code>, or the
+ * points appear to be coincident, colinear, or coplanar.
+ */
+QuickHull3D.prototype.build = function(points, nump) {
+    if (nump < 4) {
+        throw new IllegalArgumentException(
+            "Less than four input points specified");
+    }
+    if (points.length < nump) {
+        throw new IllegalArgumentException(
+            "Point array too small for specified number of points");
+    }
+    initBuffers(nump);
+    setPoints(points, nump);
+    buildHull();
+}
 
-	/**
-	 * Triangulates any non-triangular hull faces. In some cases, due to
-	 * precision issues, the resulting triangles may be very thin or small,
-	 * and hence appear to be non-convex (this same limitation is present
-	 * in <a href=http://www.qhull.org>qhull</a>).
-	 */
-QuickHull3D.prototype.triangulate = function ()
-	 {
-	   var minArea = 1000*charLength*DOUBLE_PREC;
-	   newFaces.clear();
-	   for (var it=faces.iterator(); it.hasNext(); )
-	    { var face = (Face)it.next();
-	      if (face.mark == Face.VISIBLE)
-	       {
-		 face.triangulate (newFaces, minArea);
-		 // splitFace (face);
-	       }
-	    }
-	   for (var face=newFaces.first(); face!=null; face=face.next)
-	    { faces.add (face);
-	    }
-	 }
+/**
+ * Triangulates any non-triangular hull faces. In some cases, due to
+ * precision issues, the resulting triangles may be very thin or small,
+ * and hence appear to be non-convex (this same limitation is present
+ * in <a href=http://www.qhull.org>qhull</a>).
+ */
+QuickHull3D.prototype.triangulate = function() {
+    var minArea = 1000 * charLength * DOUBLE_PREC;
+    newFaces.clear();
+    for (var it = faces.iterator(); it.hasNext();) {
+        var face = (Face) it.next();
+        if (face.mark == Face.VISIBLE) {
+            face.triangulate(newFaces, minArea);
+            // splitFace (face);
+        }
+    }
+    for (var face = newFaces.first(); face != null; face = face.next) {
+        faces.add(face);
+    }
+}
 
-QuickHull3D.prototype.initBuffers = function (nump)
-	 {
-	   if (pointBuffer.length < nump)
-	    { var newBuffer = new Vertex[nump];
-	      vertexPointIndices = new int[nump];
-	      for (var i=0; i<pointBuffer.length; i++)
-	       { newBuffer[i] = pointBuffer[i];
-	       }
-	      for (var i=pointBuffer.length; i<nump; i++)
-	       { newBuffer[i] = new Vertex();
-	       }
-	      pointBuffer = newBuffer;
-	    }
-	   faces.clear();
-	   claimed.clear();
-	   numFaces = 0;
-	   numPoints = nump;
-	 }
+QuickHull3D.prototype.initBuffers = function(nump) {
+    if (pointBuffer.length < nump) {
+        var newBuffer = new Vertex[nump];
+        vertexPointIndices = new int[nump];
+        for (var i = 0; i < pointBuffer.length; i++) {
+            newBuffer[i] = pointBuffer[i];
+        }
+        for (var i = pointBuffer.length; i < nump; i++) {
+            newBuffer[i] = new Vertex();
+        }
+        pointBuffer = newBuffer;
+    }
+    faces.clear();
+    claimed.clear();
+    numFaces = 0;
+    numPoints = nump;
+}
 
-QuickHull3D.prototype.setPoints = function (coords, nump)
-	 {
-	   for (var i=0; i<nump; i++)
-	    {
-	      var vtx = pointBuffer[i];
-	      vtx.pnt.set (coords[i*3+0], coords[i*3+1], coords[i*3+2]);
-	      vtx.index = i;
-	    }
-	 }
+QuickHull3D.prototype.setPoints = function(coords, nump) {
+    for (var i = 0; i < nump; i++) {
+        var vtx = pointBuffer[i];
+        vtx.pnt.set(coords[i * 3 + 0], coords[i * 3 + 1], coords[i * 3 + 2]);
+        vtx.index = i;
+    }
+}
 
-QuickHull3D.prototype.setPoints = function (pnts, nump)
-	 {
-	   for (var i=0; i<nump; i++)
-	    {
-	      var vtx = pointBuffer[i];
-	      vtx.pnt.set (pnts[i]);
-	      vtx.index = i;
-	    }
-	 }
+QuickHull3D.prototype.setPoints = function(pnts, nump) {
+    for (var i = 0; i < nump; i++) {
+        var vtx = pointBuffer[i];
+        vtx.pnt.set(pnts[i]);
+        vtx.index = i;
+    }
+}
 
-QuickHull3D.prototype.computeMaxAndMin = function ()
-	 {
-	   Vector3d max = new Vector3d();
-	   Vector3d min = new Vector3d();
+QuickHull3D.prototype.computeMaxAndMin = function() {
+    Vector3d max = new Vector3d();
+    Vector3d min = new Vector3d();
 
-	   for (var i=0; i<3; i++)
-	    { maxVtxs[i] = minVtxs[i] = pointBuffer[0];
-	    }
-	   max.set (pointBuffer[0].pnt);
-	   min.set (pointBuffer[0].pnt);
+    for (var i = 0; i < 3; i++) {
+        maxVtxs[i] = minVtxs[i] = pointBuffer[0];
+    }
+    max.set(pointBuffer[0].pnt);
+    min.set(pointBuffer[0].pnt);
 
-	   for (var i=1; i<numPoints; i++)
-	    { Point3d pnt = pointBuffer[i].pnt;
-	      if (pnt.x > max.x)
-	       { max.x = pnt.x;
-		 maxVtxs[0] = pointBuffer[i];
-	       }
-	      else if (pnt.x < min.x)
-	       { min.x = pnt.x;
-		 minVtxs[0] = pointBuffer[i];
-	       }
-	      if (pnt.y > max.y)
-	       { max.y = pnt.y;
-		 maxVtxs[1] = pointBuffer[i];
-	       }
-	      else if (pnt.y < min.y)
-	       { min.y = pnt.y;
-		 minVtxs[1] = pointBuffer[i];
-	       }
-	      if (pnt.z > max.z)
-	       { max.z = pnt.z;
-		 maxVtxs[2] = pointBuffer[i];
-	       }
-	      else if (pnt.z < min.z)
-	       { min.z = pnt.z;
-		 minVtxs[2] = pointBuffer[i];
-	       }
-	    }
+    for (var i = 1; i < numPoints; i++) {
+        Point3d pnt = pointBuffer[i].pnt;
+        if (pnt.x > max.x) {
+            max.x = pnt.x;
+            maxVtxs[0] = pointBuffer[i];
+        } else if (pnt.x < min.x) {
+            min.x = pnt.x;
+            minVtxs[0] = pointBuffer[i];
+        }
+        if (pnt.y > max.y) {
+            max.y = pnt.y;
+            maxVtxs[1] = pointBuffer[i];
+        } else if (pnt.y < min.y) {
+            min.y = pnt.y;
+            minVtxs[1] = pointBuffer[i];
+        }
+        if (pnt.z > max.z) {
+            max.z = pnt.z;
+            maxVtxs[2] = pointBuffer[i];
+        } else if (pnt.z < min.z) {
+            min.z = pnt.z;
+            minVtxs[2] = pointBuffer[i];
+        }
+    }
 
-	   // this epsilon formula comes from QuickHull, and I'm
-	   // not about to quibble.
-	   charLength = Math.max(max.x-min.x, max.y-min.y);
-	   charLength = Math.max(max.z-min.z, charLength);
-	   if (explicitTolerance == AUTOMATIC_TOLERANCE)
-	    { tolerance =
-		 3*DOUBLE_PREC*(Math.max(Math.abs(max.x),Math.abs(min.x))+
-				Math.max(Math.abs(max.y),Math.abs(min.y))+
-				Math.max(Math.abs(max.z),Math.abs(min.z)));
-	    }
-	   else
-	    { tolerance = explicitTolerance;
-	    }
-	 }
+    // this epsilon formula comes from QuickHull, and I'm
+    // not about to quibble.
+    charLength = Math.max(max.x - min.x, max.y - min.y);
+    charLength = Math.max(max.z - min.z, charLength);
+    if (explicitTolerance == AUTOMATIC_TOLERANCE) {
+        tolerance =
+            3 * DOUBLE_PREC * (Math.max(Math.abs(max.x), Math.abs(min.x)) +
+                Math.max(Math.abs(max.y), Math.abs(min.y)) +
+                Math.max(Math.abs(max.z), Math.abs(min.z)));
+    } else {
+        tolerance = explicitTolerance;
+    }
+}
 
-	/**
-	 * Creates the initial simplex from which the hull will be built.
-	 */
-QuickHull3D.prototype.createInitialSimplex = function ()
-	 {
-	   var max = 0;
-	   var imax = 0;
+/**
+ * Creates the initial simplex from which the hull will be built.
+ */
+QuickHull3D.prototype.createInitialSimplex = function() {
+    var max = 0;
+    var imax = 0;
 
-	   for (var i=0; i<3; i++)
-	    { var diff = maxVtxs[i].pnt.get(i)-minVtxs[i].pnt.get(i);
-	      if (diff > max)
-	       { max = diff;
-		 imax = i;
-	       }
- 	    }
+    for (var i = 0; i < 3; i++) {
+        var diff = maxVtxs[i].pnt.get(i) - minVtxs[i].pnt.get(i);
+        if (diff > max) {
+            max = diff;
+            imax = i;
+        }
+    }
 
-	   if (max <= tolerance)
-	    { throw new IllegalArgumentException (
-"Input points appear to be coincident");
-	    }
-	   var vtx = new Vertex[4];
-	   // set first two vertices to be those with the greatest
-	   // one dimensional separation
+    if (max <= tolerance) {
+        throw new IllegalArgumentException(
+            "Input points appear to be coincident");
+    }
+    var vtx = new Vertex[4];
+    // set first two vertices to be those with the greatest
+    // one dimensional separation
 
-	   vtx[0] = maxVtxs[imax];
-	   vtx[1] = minVtxs[imax];
+    vtx[0] = maxVtxs[imax];
+    vtx[1] = minVtxs[imax];
 
-	   // set third vertex to be the vertex farthest from
-	   // the line between vtx0 and vtx1
-	   Vector3d u01 = new Vector3d();
-	   Vector3d diff02 = new Vector3d();
-	   Vector3d nrml = new Vector3d();
-	   Vector3d xprod = new Vector3d();
-	   var maxSqr = 0;
-	   u01.sub (vtx[1].pnt, vtx[0].pnt);
-	   u01.normalize();
-	   for (var i=0; i<numPoints; i++)
-	    { diff02.sub (pointBuffer[i].pnt, vtx[0].pnt);
-	      xprod.cross (u01, diff02);
-	      var lenSqr = xprod.normSquared();
-	      if (lenSqr > maxSqr &&
-		  pointBuffer[i] != vtx[0] &&  // paranoid
-		  pointBuffer[i] != vtx[1])
-	       { maxSqr = lenSqr;
-		 vtx[2] = pointBuffer[i];
-		 nrml.set (xprod);
-	       }
-	    }
-	   if (Math.sqrt(maxSqr) <= 100*tolerance)
-	    { throw new IllegalArgumentException (
-"Input points appear to be colinear");
-	    }
-	   nrml.normalize();
+    // set third vertex to be the vertex farthest from
+    // the line between vtx0 and vtx1
+    Vector3d u01 = new Vector3d();
+    Vector3d diff02 = new Vector3d();
+    Vector3d nrml = new Vector3d();
+    Vector3d xprod = new Vector3d();
+    var maxSqr = 0;
+    u01.sub(vtx[1].pnt, vtx[0].pnt);
+    u01.normalize();
+    for (var i = 0; i < numPoints; i++) {
+        diff02.sub(pointBuffer[i].pnt, vtx[0].pnt);
+        xprod.cross(u01, diff02);
+        var lenSqr = xprod.normSquared();
+        if (lenSqr > maxSqr &&
+            pointBuffer[i] != vtx[0] && // paranoid
+            pointBuffer[i] != vtx[1]) {
+            maxSqr = lenSqr;
+            vtx[2] = pointBuffer[i];
+            nrml.set(xprod);
+        }
+    }
+    if (Math.sqrt(maxSqr) <= 100 * tolerance) {
+        throw new IllegalArgumentException(
+            "Input points appear to be colinear");
+    }
+    nrml.normalize();
 
 
-	   var maxDist = 0;
-	   var d0 = vtx[2].pnt.dot (nrml);
-	   for (var i=0; i<numPoints; i++)
-	    { var dist = Math.abs (pointBuffer[i].pnt.dot(nrml) - d0);
-	      if (dist > maxDist &&
-		  pointBuffer[i] != vtx[0] &&  // paranoid
-		  pointBuffer[i] != vtx[1] &&
-		  pointBuffer[i] != vtx[2])
-	       { maxDist = dist;
-		 vtx[3] = pointBuffer[i];
-	       }
-	    }
-	   if (Math.abs(maxDist) <= 100*tolerance)
-	    { throw new IllegalArgumentException (
-"Input points appear to be coplanar");
-	    }
+    var maxDist = 0;
+    var d0 = vtx[2].pnt.dot(nrml);
+    for (var i = 0; i < numPoints; i++) {
+        var dist = Math.abs(pointBuffer[i].pnt.dot(nrml) - d0);
+        if (dist > maxDist &&
+            pointBuffer[i] != vtx[0] && // paranoid
+            pointBuffer[i] != vtx[1] &&
+            pointBuffer[i] != vtx[2]) {
+            maxDist = dist;
+            vtx[3] = pointBuffer[i];
+        }
+    }
+    if (Math.abs(maxDist) <= 100 * tolerance) {
+        throw new IllegalArgumentException(
+            "Input points appear to be coplanar");
+    }
 
-	   if (debug)
-	    { System.out.println ("initial vertices:");
-	      System.out.println (vtx[0].index + ": " + vtx[0].pnt);
-	      System.out.println (vtx[1].index + ": " + vtx[1].pnt);
-	      System.out.println (vtx[2].index + ": " + vtx[2].pnt);
-	      System.out.println (vtx[3].index + ": " + vtx[3].pnt);
-	    }
+    if (debug) {
+        System.out.println("initial vertices:");
+        System.out.println(vtx[0].index + ": " + vtx[0].pnt);
+        System.out.println(vtx[1].index + ": " + vtx[1].pnt);
+        System.out.println(vtx[2].index + ": " + vtx[2].pnt);
+        System.out.println(vtx[3].index + ": " + vtx[3].pnt);
+    }
 
-	   var tris = new Face[4];
+    var tris = new Face[4];
 
-	   if (vtx[3].pnt.dot (nrml) - d0 < 0)
-	    { tris[0] = Face.createTriangle (vtx[0], vtx[1], vtx[2]);
-	      tris[1] = Face.createTriangle (vtx[3], vtx[1], vtx[0]);
-	      tris[2] = Face.createTriangle (vtx[3], vtx[2], vtx[1]);
-	      tris[3] = Face.createTriangle (vtx[3], vtx[0], vtx[2]);
+    if (vtx[3].pnt.dot(nrml) - d0 < 0) {
+        tris[0] = Face.createTriangle(vtx[0], vtx[1], vtx[2]);
+        tris[1] = Face.createTriangle(vtx[3], vtx[1], vtx[0]);
+        tris[2] = Face.createTriangle(vtx[3], vtx[2], vtx[1]);
+        tris[3] = Face.createTriangle(vtx[3], vtx[0], vtx[2]);
 
-	      for (var i=0; i<3; i++)
-	       { var k = (i+1)%3;
-		 tris[i+1].getEdge(1).setOpposite (tris[k+1].getEdge(0));
-		 tris[i+1].getEdge(2).setOpposite (tris[0].getEdge(k));
-	       }
-	    }
-	   else
-	    { tris[0] = Face.createTriangle (vtx[0], vtx[2], vtx[1]);
-	      tris[1] = Face.createTriangle (vtx[3], vtx[0], vtx[1]);
-	      tris[2] = Face.createTriangle (vtx[3], vtx[1], vtx[2]);
-	      tris[3] = Face.createTriangle (vtx[3], vtx[2], vtx[0]);
+        for (var i = 0; i < 3; i++) {
+            var k = (i + 1) % 3;
+            tris[i + 1].getEdge(1).setOpposite(tris[k + 1].getEdge(0));
+            tris[i + 1].getEdge(2).setOpposite(tris[0].getEdge(k));
+        }
+    } else {
+        tris[0] = Face.createTriangle(vtx[0], vtx[2], vtx[1]);
+        tris[1] = Face.createTriangle(vtx[3], vtx[0], vtx[1]);
+        tris[2] = Face.createTriangle(vtx[3], vtx[1], vtx[2]);
+        tris[3] = Face.createTriangle(vtx[3], vtx[2], vtx[0]);
 
-	      for (var i=0; i<3; i++)
-	       { var k = (i+1)%3;
-		 tris[i+1].getEdge(0).setOpposite (tris[k+1].getEdge(1));
-		 tris[i+1].getEdge(2).setOpposite (tris[0].getEdge((3-i)%3));
-	       }
-	    }
+        for (var i = 0; i < 3; i++) {
+            var k = (i + 1) % 3;
+            tris[i + 1].getEdge(0).setOpposite(tris[k + 1].getEdge(1));
+            tris[i + 1].getEdge(2).setOpposite(tris[0].getEdge((3 - i) % 3));
+        }
+    }
 
 
- 	   for (var i=0; i<4; i++)
- 	    { faces.add (tris[i]);
- 	    }
+    for (var i = 0; i < 4; i++) {
+        faces.add(tris[i]);
+    }
 
-	   for (var i=0; i<numPoints; i++)
-	    { var v = pointBuffer[i];
+    for (var i = 0; i < numPoints; i++) {
+        var v = pointBuffer[i];
 
-	      if (v == vtx[0] || v == vtx[1] || v == vtx[2] || v == vtx[3])
-	       { continue;
-	       }
+        if (v == vtx[0] || v == vtx[1] || v == vtx[2] || v == vtx[3]) {
+            continue;
+        }
 
-	      maxDist = tolerance;
-	      var maxFace = null;
-	      for (var k=0; k<4; k++)
-	       { var dist = tris[k].distanceToPlane (v.pnt);
-		 if (dist > maxDist)
-		  { maxFace = tris[k];
-		    maxDist = dist;
-		  }
-	       }
-	      if (maxFace != null)
-	       { addPointToFace (v, maxFace);
-	       }
-	    }
-	 }
+        maxDist = tolerance;
+        var maxFace = null;
+        for (var k = 0; k < 4; k++) {
+            var dist = tris[k].distanceToPlane(v.pnt);
+            if (dist > maxDist) {
+                maxFace = tris[k];
+                maxDist = dist;
+            }
+        }
+        if (maxFace != null) {
+            addPointToFace(v, maxFace);
+        }
+    }
+}
 
-	/**
-	 * Returns the number of vertices in this hull.
-	 *
-	 * @return number of vertices
-	 */
-QuickHull3D.prototype.getNumVertices = function()
-	 {
-	   return numVertices;
-	 }
+/**
+ * Returns the number of vertices in this hull.
+ *
+ * @return number of vertices
+ */
+QuickHull3D.prototype.getNumVertices = function() {
+    return numVertices;
+}
 
-	/**
-	 * Returns the vertex points in this hull.
-	 *
-	 * @return array of vertex points
-	 * @see QuickHull3D#getVertices(double[])
-	 * @see QuickHull3D#getFaces()
-	 */
-QuickHull3D.prototype.getVertices = function()
- 	 {
- 	   Point3d[] vtxs = new Point3d[numVertices];
- 	   for (var i=0; i<numVertices; i++)
-	    { vtxs[i] = pointBuffer[vertexPointIndices[i]].pnt;
-	    }
-	   return vtxs;
-	 }
+/**
+ * Returns the vertex points in this hull.
+ *
+ * @return array of vertex points
+ * @see QuickHull3D#getVertices(double[])
+ * @see QuickHull3D#getFaces()
+ */
+QuickHull3D.prototype.getVertices = function() {
+    Point3d[] vtxs = new Point3d[numVertices];
+    for (var i = 0; i < numVertices; i++) {
+        vtxs[i] = pointBuffer[vertexPointIndices[i]].pnt;
+    }
+    return vtxs;
+}
 
-	/**
-	 * Returns the coordinates of the vertex points of this hull.
-	 *
-	 * @param coords returns the x, y, z coordinates of each vertex.
-	 * This length of this array must be at least three times
-	 * the number of vertices.
-	 * @return the number of vertices
-	 * @see QuickHull3D#getVertices()
-	 * @see QuickHull3D#getFaces()
-	 */
- 	var getVertices(var coords)
- 	 {
- 	   for (var i=0; i<numVertices; i++)
-	    { Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
-	      coords[i*3+0] = pnt.x;
-	      coords[i*3+1] = pnt.y;
-	      coords[i*3+2] = pnt.z;
-	    }
-	   return numVertices;
-	 }
+/**
+ * Returns the coordinates of the vertex points of this hull.
+ *
+ * @param coords returns the x, y, z coordinates of each vertex.
+ * This length of this array must be at least three times
+ * the number of vertices.
+ * @return the number of vertices
+ * @see QuickHull3D#getVertices()
+ * @see QuickHull3D#getFaces()
+ */
+var getVertices(var coords) {
+    for (var i = 0; i < numVertices; i++) {
+        Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
+        coords[i * 3 + 0] = pnt.x;
+        coords[i * 3 + 1] = pnt.y;
+        coords[i * 3 + 2] = pnt.z;
+    }
+    return numVertices;
+}
 
-	/**
-	 * Returns an array specifing the index of each hull vertex
-	 * with respect to the original input points.
-	 *
-	 * @return vertex indices with respect to the original points
-	 */
-QuickHull3D.prototype.getVertexPointIndices = function()
-	 {
-	   var indices = new int[numVertices];
-	   for (var i=0; i<numVertices; i++)
-	    { indices[i] = vertexPointIndices[i];
-	    }
-	   return indices;
-	 }
+/**
+ * Returns an array specifing the index of each hull vertex
+ * with respect to the original input points.
+ *
+ * @return vertex indices with respect to the original points
+ */
+QuickHull3D.prototype.getVertexPointIndices = function() {
+    var indices = new int[numVertices];
+    for (var i = 0; i < numVertices; i++) {
+        indices[i] = vertexPointIndices[i];
+    }
+    return indices;
+}
 
-	/**
-	 * Returns the number of faces in this hull.
-	 *
-	 * @return number of faces
-	 */
-QuickHull3D.prototype.getNumFaces = function()
-	 {
-	   return faces.size();
-	 }
+/**
+ * Returns the number of faces in this hull.
+ *
+ * @return number of faces
+ */
+QuickHull3D.prototype.getNumFaces = function() {
+    return faces.size();
+}
 
-	/**
-	 * Returns the faces associated with this hull.
-	 *
-	 * <p>Each face is represented by an integer array which gives the
-	 * indices of the vertices. These indices are numbered
-	 * relative to the
-	 * hull vertices, are zero-based,
-	 * and are arranged counter-clockwise. More control
-	 * over the index format can be obtained using
-	 * {@link #getFaces(int) getFaces(indexFlags)}.
-	 *
-	 * @return array of integer arrays, giving the vertex
-	 * indices for each face.
-	 * @see QuickHull3D#getVertices()
-	 * @see QuickHull3D#getFaces(int)
-	 */
-QuickHull3D.prototype.getFaces = function ()
-	 {
-	   return getFaces(0);
-	 }
+/**
+ * Returns the faces associated with this hull.
+ *
+ * <p>Each face is represented by an integer array which gives the
+ * indices of the vertices. These indices are numbered
+ * relative to the
+ * hull vertices, are zero-based,
+ * and are arranged counter-clockwise. More control
+ * over the index format can be obtained using
+ * {@link #getFaces(int) getFaces(indexFlags)}.
+ *
+ * @return array of integer arrays, giving the vertex
+ * indices for each face.
+ * @see QuickHull3D#getVertices()
+ * @see QuickHull3D#getFaces(int)
+ */
+QuickHull3D.prototype.getFaces = function() {
+    return getFaces(0);
+}
 
-	/**
-	 * Returns the faces associated with this hull.
-	 *
-	 * <p>Each face is represented by an integer array which gives the
-	 * indices of the vertices. By default, these indices are numbered with
-	 * respect to the hull vertices (as opposed to the input points), are
-	 * zero-based, and are arranged counter-clockwise. However, this
-	 * can be changed by setting {@link #POINT_RELATIVE
-	 * POINT_RELATIVE}, {@link #INDEXED_FROM_ONE INDEXED_FROM_ONE}, or
-	 * {@link #CLOCKWISE CLOCKWISE} in the indexFlags parameter.
-	 *
-	 * @param indexFlags specifies index characteristics (0 results
-	 * in the default)
-	 * @return array of integer arrays, giving the vertex
-	 * indices for each face.
-	 * @see QuickHull3D#getVertices()
-	 */
-QuickHull3D.prototype.getFaces = function (indexFlags)
-	 {
-	   var allFaces = new int[faces.size()][];
-	   var k = 0;
-	   for (var it=faces.iterator(); it.hasNext(); )
-	    { var face = (Face)it.next();
-	      allFaces[k] = new int[face.numVertices()];
-	      getFaceIndices (allFaces[k], face, indexFlags);
-	      k++;
-	    }
-	   return allFaces;
-	 }
+/**
+ * Returns the faces associated with this hull.
+ *
+ * <p>Each face is represented by an integer array which gives the
+ * indices of the vertices. By default, these indices are numbered with
+ * respect to the hull vertices (as opposed to the input points), are
+ * zero-based, and are arranged counter-clockwise. However, this
+ * can be changed by setting {@link #POINT_RELATIVE
+ * POINT_RELATIVE}, {@link #INDEXED_FROM_ONE INDEXED_FROM_ONE}, or
+ * {@link #CLOCKWISE CLOCKWISE} in the indexFlags parameter.
+ *
+ * @param indexFlags specifies index characteristics (0 results
+ * in the default)
+ * @return array of integer arrays, giving the vertex
+ * indices for each face.
+ * @see QuickHull3D#getVertices()
+ */
+QuickHull3D.prototype.getFaces = function(indexFlags) {
+    var allFaces = new int[faces.size()][];
+    var k = 0;
+    for (var it = faces.iterator(); it.hasNext();) {
+        var face = (Face) it.next();
+        allFaces[k] = new int[face.numVertices()];
+        getFaceIndices(allFaces[k], face, indexFlags);
+        k++;
+    }
+    return allFaces;
+}
 
-	/**
-	 * Prints the vertices and faces of this hull to the stream ps.
-	 *
-	 * <p>
-	 * This is done using the Alias Wavefront .obj file
-	 * format, with the vertices printed first (each preceding by
-	 * the letter <code>v</code>), followed by the vertex indices
-	 * for each face (each
-	 * preceded by the letter <code>f</code>).
-	 *
-	 * <p>The face indices are numbered with respect to the hull vertices
-	 * (as opposed to the input points), with a lowest index of 1, and are
-	 * arranged counter-clockwise. More control over the index format can
-	 * be obtained using
-	 * {@link #print(PrintStream,int) print(ps,indexFlags)}.
-	 *
-	 * @param ps stream used for printing
-	 * @see QuickHull3D#print(PrintStream,int)
-	 * @see QuickHull3D#getVertices()
-	 * @see QuickHull3D#getFaces()
-	 */
-QuickHull3D.prototype.print = function (ps)
-	 {
-	   print (ps, 0);
-	 }
+/**
+ * Prints the vertices and faces of this hull to the stream ps.
+ *
+ * <p>
+ * This is done using the Alias Wavefront .obj file
+ * format, with the vertices printed first (each preceding by
+ * the letter <code>v</code>), followed by the vertex indices
+ * for each face (each
+ * preceded by the letter <code>f</code>).
+ *
+ * <p>The face indices are numbered with respect to the hull vertices
+ * (as opposed to the input points), with a lowest index of 1, and are
+ * arranged counter-clockwise. More control over the index format can
+ * be obtained using
+ * {@link #print(PrintStream,int) print(ps,indexFlags)}.
+ *
+ * @param ps stream used for printing
+ * @see QuickHull3D#print(PrintStream,int)
+ * @see QuickHull3D#getVertices()
+ * @see QuickHull3D#getFaces()
+ */
+QuickHull3D.prototype.print = function(ps) {
+    print(ps, 0);
+}
 
-	/**
-	 * Prints the vertices and faces of this hull to the stream ps.
-	 *
-	 * <p> This is done using the Alias Wavefront .obj file format, with
-	 * the vertices printed first (each preceding by the letter
-	 * <code>v</code>), followed by the vertex indices for each face (each
-	 * preceded by the letter <code>f</code>).
-	 *
-	 * <p>By default, the face indices are numbered with respect to the
-	 * hull vertices (as opposed to the input points), with a lowest index
-	 * of 1, and are arranged counter-clockwise. However, this
-	 * can be changed by setting {@link #POINT_RELATIVE POINT_RELATIVE},
-	 * {@link #INDEXED_FROM_ONE INDEXED_FROM_ZERO}, or {@link #CLOCKWISE
-	 * CLOCKWISE} in the indexFlags parameter.
-	 *
-	 * @param ps stream used for printing
-	 * @param indexFlags specifies index characteristics
-	 * (0 results in the default).
-	 * @see QuickHull3D#getVertices()
-	 * @see QuickHull3D#getFaces()
-	 */
-QuickHull3D.prototype.print = function (ps, indexFlags)
-	 {
-	   if ((indexFlags & INDEXED_FROM_ZERO) == 0)
-	    { indexFlags |= INDEXED_FROM_ONE;
-	    }
-	   for (var i=0; i<numVertices; i++)
-	    { Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
-	      ps.println ("v " + pnt.x + " " + pnt.y + " " + pnt.z);
-	    }
-	   for (var fi=faces.iterator(); fi.hasNext(); )
-	    { var face = (Face)fi.next();
-	      var indices = new int[face.numVertices()];
-	      getFaceIndices (indices, face, indexFlags);
+/**
+ * Prints the vertices and faces of this hull to the stream ps.
+ *
+ * <p> This is done using the Alias Wavefront .obj file format, with
+ * the vertices printed first (each preceding by the letter
+ * <code>v</code>), followed by the vertex indices for each face (each
+ * preceded by the letter <code>f</code>).
+ *
+ * <p>By default, the face indices are numbered with respect to the
+ * hull vertices (as opposed to the input points), with a lowest index
+ * of 1, and are arranged counter-clockwise. However, this
+ * can be changed by setting {@link #POINT_RELATIVE POINT_RELATIVE},
+ * {@link #INDEXED_FROM_ONE INDEXED_FROM_ZERO}, or {@link #CLOCKWISE
+ * CLOCKWISE} in the indexFlags parameter.
+ *
+ * @param ps stream used for printing
+ * @param indexFlags specifies index characteristics
+ * (0 results in the default).
+ * @see QuickHull3D#getVertices()
+ * @see QuickHull3D#getFaces()
+ */
+QuickHull3D.prototype.print = function(ps, indexFlags) {
+    if ((indexFlags & INDEXED_FROM_ZERO) == 0) {
+        indexFlags |= INDEXED_FROM_ONE;
+    }
+    for (var i = 0; i < numVertices; i++) {
+        Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
+        ps.println("v " + pnt.x + " " + pnt.y + " " + pnt.z);
+    }
+    for (var fi = faces.iterator(); fi.hasNext();) {
+        var face = (Face) fi.next();
+        var indices = new int[face.numVertices()];
+        getFaceIndices(indices, face, indexFlags);
 
-	      ps.print ("f");
-	      for (var k=0; k<indices.length; k++)
-	       { ps.print (" " + indices[k]);
-	       }
-	      ps.println ("");
-	    }
-	 }
+        ps.print("f");
+        for (var k = 0; k < indices.length; k++) {
+            ps.print(" " + indices[k]);
+        }
+        ps.println("");
+    }
+}
 
-QuickHull3D.prototype.getFaceIndices = function (indices, face, flags)
-	 {
-	   var ccw = ((flags & CLOCKWISE) == 0);
-	   var indexedFromOne = ((flags & INDEXED_FROM_ONE) != 0);
-	   var pointRelative = ((flags & POINT_RELATIVE) != 0);
+QuickHull3D.prototype.getFaceIndices = function(indices, face, flags) {
+    var ccw = ((flags & CLOCKWISE) == 0);
+    var indexedFromOne = ((flags & INDEXED_FROM_ONE) != 0);
+    var pointRelative = ((flags & POINT_RELATIVE) != 0);
 
-	   var hedge = face.he0;
-	   var k = 0;
-	   do
-	    { var idx = hedge.head().index;
-	      if (pointRelative)
-	       { idx = vertexPointIndices[idx];
-	       }
-	      if (indexedFromOne)
-	       { idx++;
-	       }
-	      indices[k++] = idx;
-	      hedge = (ccw ? hedge.next : hedge.prev);
-	    }
-	   while (hedge != face.he0);
-	 }
+    var hedge = face.he0;
+    var k = 0;
+    do {
+        var idx = hedge.head().index;
+        if (pointRelative) {
+            idx = vertexPointIndices[idx];
+        }
+        if (indexedFromOne) {
+            idx++;
+        }
+        indices[k++] = idx;
+        hedge = (ccw ? hedge.next : hedge.prev);
+    }
+    while (hedge != face.he0);
+}
 
-QuickHull3D.prototype.resolveUnclaimedPoints = function (newFaces)
-	 {
-	   var vtxNext = unclaimed.first();
- 	   for (var vtx=vtxNext; vtx!=null; vtx=vtxNext)
- 	    { vtxNext = vtx.next;
+QuickHull3D.prototype.resolveUnclaimedPoints = function(newFaces) {
+    var vtxNext = unclaimed.first();
+    for (var vtx = vtxNext; vtx != null; vtx = vtxNext) {
+        vtxNext = vtx.next;
 
-	      var maxDist = tolerance;
-	      var maxFace = null;
-	      for (var newFace=newFaces.first(); newFace != null;
-		   newFace=newFace.next)
-	       {
-		 if (newFace.mark == Face.VISIBLE)
-		  { var dist = newFace.distanceToPlane(vtx.pnt);
-		    if (dist > maxDist)
-		     { maxDist = dist;
-		       maxFace = newFace;
-		     }
-		    if (maxDist > 1000*tolerance)
-		     { break;
-		     }
-		  }
-	       }
-	      if (maxFace != null)
-	       {
-		 addPointToFace (vtx, maxFace);
- 		 if (debug && vtx.index == findIndex)
- 		  { System.out.println (findIndex + " CLAIMED BY " +
- 		     maxFace.getVertexString());
- 		  }
-	       }
-	      else
-	       { if (debug && vtx.index == findIndex)
-		  { System.out.println (findIndex + " DISCARDED");
-		  }
-	       }
-	    }
-	 }
+        var maxDist = tolerance;
+        var maxFace = null;
+        for (var newFace = newFaces.first(); newFace != null; newFace = newFace.next) {
+            if (newFace.mark == Face.VISIBLE) {
+                var dist = newFace.distanceToPlane(vtx.pnt);
+                if (dist > maxDist) {
+                    maxDist = dist;
+                    maxFace = newFace;
+                }
+                if (maxDist > 1000 * tolerance) {
+                    break;
+                }
+            }
+        }
+        if (maxFace != null) {
+            addPointToFace(vtx, maxFace);
+            if (debug && vtx.index == findIndex) {
+                System.out.println(findIndex + " CLAIMED BY " +
+                    maxFace.getVertexString());
+            }
+        } else {
+            if (debug && vtx.index == findIndex) {
+                System.out.println(findIndex + " DISCARDED");
+            }
+        }
+    }
+}
 
-QuickHull3D.prototype.deleteFacePoints = function (face, absorbingFace)
-	 {
-	   var faceVtxs = removeAllPointsFromFace (face);
-	   if (faceVtxs != null)
-	    {
-	      if (absorbingFace == null)
-	       { unclaimed.addAll (faceVtxs);
-	       }
-	      else
-	       { var vtxNext = faceVtxs;
-		 for (var vtx=vtxNext; vtx!=null; vtx=vtxNext)
-		  { vtxNext = vtx.next;
-		    var dist = absorbingFace.distanceToPlane (vtx.pnt);
-		    if (dist > tolerance)
-		     {
-		       addPointToFace (vtx, absorbingFace);
-		     }
-		    else
-		     {
-		       unclaimed.add (vtx);
-		     }
-		  }
-	       }
-	    }
-	 }
+QuickHull3D.prototype.deleteFacePoints = function(face, absorbingFace) {
+    var faceVtxs = removeAllPointsFromFace(face);
+    if (faceVtxs != null) {
+        if (absorbingFace == null) {
+            unclaimed.addAll(faceVtxs);
+        } else {
+            var vtxNext = faceVtxs;
+            for (var vtx = vtxNext; vtx != null; vtx = vtxNext) {
+                vtxNext = vtx.next;
+                var dist = absorbingFace.distanceToPlane(vtx.pnt);
+                if (dist > tolerance) {
+                    addPointToFace(vtx, absorbingFace);
+                } else {
+                    unclaimed.add(vtx);
+                }
+            }
+        }
+    }
+}
 
 QuickHull3D.NONCONVEX_WRT_LARGER_FACE = 1;
 QuickHull3D.NONCONVEX = 2;
 
-QuickHull3D.prototype.oppFaceDistance = function (he)
-	 {
-	   return he.face.distanceToPlane (he.opposite.face.getCentroid());
-	 }
+QuickHull3D.prototype.oppFaceDistance = function(he) {
+    return he.face.distanceToPlane(he.opposite.face.getCentroid());
+}
 
-QuickHull3D.prototype.doAdjacentMerge = function (face, mergeType)
-	 {
-	   var hedge = face.he0;
+QuickHull3D.prototype.doAdjacentMerge = function(face, mergeType) {
+    var hedge = face.he0;
 
-	   var convex = true;
-	   do
-	    { var oppFace = hedge.oppositeFace();
-	      var merge = false;
-	      var dist1, dist2;
+    var convex = true;
+    do {
+        var oppFace = hedge.oppositeFace();
+        var merge = false;
+        var dist1, dist2;
 
-	      if (mergeType == NONCONVEX)
-	       { // then merge faces if they are definitively non-convex
-		 if (oppFaceDistance (hedge) > -tolerance ||
-		     oppFaceDistance (hedge.opposite) > -tolerance)
-		  { merge = true;
-		  }
-	       }
-	      else // mergeType == NONCONVEX_WRT_LARGER_FACE
-	       { // merge faces if they are parallel or non-convex
-		 // wrt to the larger face; otherwise, just mark
-		 // the face non-convex for the second pass.
-		 if (face.area > oppFace.area)
-		  { if ((dist1 = oppFaceDistance (hedge)) > -tolerance)
-		     { merge = true;
-		     }
-		    else if (oppFaceDistance (hedge.opposite) > -tolerance)
-		     { convex = false;
-		     }
-		  }
-		 else
-		  { if (oppFaceDistance (hedge.opposite) > -tolerance)
-		     { merge = true;
-		     }
-		    else if (oppFaceDistance (hedge) > -tolerance)
-		     { convex = false;
-		     }
-		  }
-	       }
+        if (mergeType == NONCONVEX) { // then merge faces if they are definitively non-convex
+            if (oppFaceDistance(hedge) > -tolerance ||
+                oppFaceDistance(hedge.opposite) > -tolerance) {
+                merge = true;
+            }
+        } else // mergeType == NONCONVEX_WRT_LARGER_FACE
+        { // merge faces if they are parallel or non-convex
+            // wrt to the larger face; otherwise, just mark
+            // the face non-convex for the second pass.
+            if (face.area > oppFace.area) {
+                if ((dist1 = oppFaceDistance(hedge)) > -tolerance) {
+                    merge = true;
+                } else if (oppFaceDistance(hedge.opposite) > -tolerance) {
+                    convex = false;
+                }
+            } else {
+                if (oppFaceDistance(hedge.opposite) > -tolerance) {
+                    merge = true;
+                } else if (oppFaceDistance(hedge) > -tolerance) {
+                    convex = false;
+                }
+            }
+        }
 
-	      if (merge)
-	       { if (debug)
-		  { System.out.println (
-		    "  merging " + face.getVertexString() + "  and  " +
-		    oppFace.getVertexString());
-		  }
+        if (merge) {
+            if (debug) {
+                System.out.println(
+                    "  merging " + face.getVertexString() + "  and  " +
+                    oppFace.getVertexString());
+            }
 
-		 var numd = face.mergeAdjacentFace (hedge, discardedFaces);
-		 for (var i=0; i<numd; i++)
-		  { deleteFacePoints (discardedFaces[i], face);
-		  }
-		 if (debug)
-		  { System.out.println (
-		       "  result: " + face.getVertexString());
-		  }
-		 return true;
-	       }
-	      hedge = hedge.next;
-	    }
-	   while (hedge != face.he0);
-	   if (!convex)
-	    { face.mark = Face.NON_CONVEX;
-	    }
-	   return false;
-	 }
+            var numd = face.mergeAdjacentFace(hedge, discardedFaces);
+            for (var i = 0; i < numd; i++) {
+                deleteFacePoints(discardedFaces[i], face);
+            }
+            if (debug) {
+                System.out.println(
+                    "  result: " + face.getVertexString());
+            }
+            return true;
+        }
+        hedge = hedge.next;
+    }
+    while (hedge != face.he0);
+    if (!convex) {
+        face.mark = Face.NON_CONVEX;
+    }
+    return false;
+}
 
-QuickHull3D.prototype.calculateHorizon = function (
-	   eyePnt, edge0, face, horizon)
-	 {
-//	   oldFaces.add (face);
-	   deleteFacePoints (face, null);
- 	   face.mark = Face.DELETED;
-	   if (debug)
-	    { System.out.println ("  visiting face " + face.getVertexString());
-	    }
-	   var edge;
-	   if (edge0 == null)
-	    { edge0 = face.getEdge(0);
-	      edge = edge0;
-	    }
-	   else
-	    { edge = edge0.getNext();
-	    }
-	   do
-	    { var oppFace = edge.oppositeFace();
-	      if (oppFace.mark == Face.VISIBLE)
-	       { if (oppFace.distanceToPlane (eyePnt) > tolerance)
-		  { calculateHorizon (eyePnt, edge.getOpposite(),
-				      oppFace, horizon);
-		  }
-		 else
-		  { horizon.add (edge);
-		    if (debug)
-		     { System.out.println ("  adding horizon edge " +
-					   edge.getVertexString());
-		     }
-		  }
-	       }
-	      edge = edge.getNext();
-	    }
-	   while (edge != edge0);
-	 }
+QuickHull3D.prototype.calculateHorizon = function(
+    eyePnt, edge0, face, horizon) {
+    //	   oldFaces.add (face);
+    deleteFacePoints(face, null);
+    face.mark = Face.DELETED;
+    if (debug) {
+        System.out.println("  visiting face " + face.getVertexString());
+    }
+    var edge;
+    if (edge0 == null) {
+        edge0 = face.getEdge(0);
+        edge = edge0;
+    } else {
+        edge = edge0.getNext();
+    }
+    do {
+        var oppFace = edge.oppositeFace();
+        if (oppFace.mark == Face.VISIBLE) {
+            if (oppFace.distanceToPlane(eyePnt) > tolerance) {
+                calculateHorizon(eyePnt, edge.getOpposite(),
+                    oppFace, horizon);
+            } else {
+                horizon.add(edge);
+                if (debug) {
+                    System.out.println("  adding horizon edge " +
+                        edge.getVertexString());
+                }
+            }
+        }
+        edge = edge.getNext();
+    }
+    while (edge != edge0);
+}
 
-QuickHull3D.prototype.addAdjoiningFace = function (
-	   eyeVtx, he)
-	 {
-	   var face = Face.createTriangle (
-	      eyeVtx, he.tail(), he.head());
-	   faces.add (face);
-	   face.getEdge(-1).setOpposite(he.getOpposite());
-	   return face.getEdge(0);
-	 }
+QuickHull3D.prototype.addAdjoiningFace = function(
+    eyeVtx, he) {
+    var face = Face.createTriangle(
+        eyeVtx, he.tail(), he.head());
+    faces.add(face);
+    face.getEdge(-1).setOpposite(he.getOpposite());
+    return face.getEdge(0);
+}
 
-QuickHull3D.prototype.addNewFaces = function (
-	   newFaces, eyeVtx, horizon)
-	 {
-	   newFaces.clear();
+QuickHull3D.prototype.addNewFaces = function(
+    newFaces, eyeVtx, horizon) {
+    newFaces.clear();
 
-	   var hedgeSidePrev = null;
-	   var hedgeSideBegin = null;
+    var hedgeSidePrev = null;
+    var hedgeSideBegin = null;
 
-	   for (var it=horizon.iterator(); it.hasNext(); )
-	    { var horizonHe = (HalfEdge)it.next();
-	      var hedgeSide = addAdjoiningFace (eyeVtx, horizonHe);
-	      if (debug)
-	       { System.out.println (
-		    "new face: " + hedgeSide.face.getVertexString());
-	       }
-	      if (hedgeSidePrev != null)
-	       { hedgeSide.next.setOpposite (hedgeSidePrev);
-	       }
-	      else
-	       { hedgeSideBegin = hedgeSide;
-	       }
-	      newFaces.add (hedgeSide.getFace());
-	      hedgeSidePrev = hedgeSide;
-	    }
-	   hedgeSideBegin.next.setOpposite (hedgeSidePrev);
-	 }
+    for (var it = horizon.iterator(); it.hasNext();) {
+        var horizonHe = (HalfEdge) it.next();
+        var hedgeSide = addAdjoiningFace(eyeVtx, horizonHe);
+        if (debug) {
+            System.out.println(
+                "new face: " + hedgeSide.face.getVertexString());
+        }
+        if (hedgeSidePrev != null) {
+            hedgeSide.next.setOpposite(hedgeSidePrev);
+        } else {
+            hedgeSideBegin = hedgeSide;
+        }
+        newFaces.add(hedgeSide.getFace());
+        hedgeSidePrev = hedgeSide;
+    }
+    hedgeSideBegin.next.setOpposite(hedgeSidePrev);
+}
 
-QuickHull3D.prototype.nextPointToAdd = function()
-	 {
-	   if (!claimed.isEmpty())
-	    { var eyeFace = claimed.first().face;
-	      var eyeVtx = null;
-	      var maxDist = 0;
-	      for (var vtx=eyeFace.outside;
-		   vtx != null && vtx.face==eyeFace;
-		   vtx = vtx.next)
-	       { var dist = eyeFace.distanceToPlane(vtx.pnt);
-		 if (dist > maxDist)
-		  { maxDist = dist;
-		    eyeVtx = vtx;
-		  }
-	       }
-	      return eyeVtx;
-	    }
-	   else
-	    { return null;
-	    }
-	 }
+QuickHull3D.prototype.nextPointToAdd = function() {
+    if (!claimed.isEmpty()) {
+        var eyeFace = claimed.first().face;
+        var eyeVtx = null;
+        var maxDist = 0;
+        for (var vtx = eyeFace.outside; vtx != null && vtx.face == eyeFace; vtx = vtx.next) {
+            var dist = eyeFace.distanceToPlane(vtx.pnt);
+            if (dist > maxDist) {
+                maxDist = dist;
+                eyeVtx = vtx;
+            }
+        }
+        return eyeVtx;
+    } else {
+        return null;
+    }
+}
 
-QuickHull3D.prototype.addPointToHull = function(eyeVtx)
-	 {
-	     horizon.clear();
-	     unclaimed.clear();
+QuickHull3D.prototype.addPointToHull = function(eyeVtx) {
+    horizon.clear();
+    unclaimed.clear();
 
-	     if (debug)
-	      { System.out.println ("Adding point: " + eyeVtx.index);
-		System.out.println (
-		   " which is " + eyeVtx.face.distanceToPlane(eyeVtx.pnt) +
-		   " above face " + eyeVtx.face.getVertexString());
-	      }
-	     removePointFromFace (eyeVtx, eyeVtx.face);
-	     calculateHorizon (eyeVtx.pnt, null, eyeVtx.face, horizon);
-	     newFaces.clear();
-	     addNewFaces (newFaces, eyeVtx, horizon);
+    if (debug) {
+        System.out.println("Adding point: " + eyeVtx.index);
+        System.out.println(
+            " which is " + eyeVtx.face.distanceToPlane(eyeVtx.pnt) +
+            " above face " + eyeVtx.face.getVertexString());
+    }
+    removePointFromFace(eyeVtx, eyeVtx.face);
+    calculateHorizon(eyeVtx.pnt, null, eyeVtx.face, horizon);
+    newFaces.clear();
+    addNewFaces(newFaces, eyeVtx, horizon);
 
-	     // first merge pass ... merge faces which are non-convex
-	     // as determined by the larger face
+    // first merge pass ... merge faces which are non-convex
+    // as determined by the larger face
 
-	     for (var face = newFaces.first(); face!=null; face=face.next)
-	      {
-		if (face.mark == Face.VISIBLE)
-		 { while (doAdjacentMerge(face, NONCONVEX_WRT_LARGER_FACE))
-		      ;
-		 }
-	      }
-	     // second merge pass ... merge faces which are non-convex
-	     // wrt either face	     
-	     for (var face = newFaces.first(); face!=null; face=face.next)
-	      {
- 		if (face.mark == Face.NON_CONVEX)
-		 { face.mark = Face.VISIBLE;
-		   while (doAdjacentMerge(face, NONCONVEX))
-		      ;
- 		 }
- 	      }
-	     resolveUnclaimedPoints(newFaces);
-	 }
+    for (var face = newFaces.first(); face != null; face = face.next) {
+        if (face.mark == Face.VISIBLE) {
+            while (doAdjacentMerge(face, NONCONVEX_WRT_LARGER_FACE))
+            ;
+        }
+    }
+    // second merge pass ... merge faces which are non-convex
+    // wrt either face	     
+    for (var face = newFaces.first(); face != null; face = face.next) {
+        if (face.mark == Face.NON_CONVEX) {
+            face.mark = Face.VISIBLE;
+            while (doAdjacentMerge(face, NONCONVEX))
+            ;
+        }
+    }
+    resolveUnclaimedPoints(newFaces);
+}
 
-QuickHull3D.prototype.buildHull = function ()
-	 {
-	   var cnt = 0;
-	   var eyeVtx;
+QuickHull3D.prototype.buildHull = function() {
+    var cnt = 0;
+    var eyeVtx;
 
-	   computeMaxAndMin ();
-	   createInitialSimplex ();
-	   while ((eyeVtx = nextPointToAdd()) != null)
-	    { addPointToHull (eyeVtx);
-	      cnt++;
-	      if (debug)
-	       { System.out.println ("iteration " + cnt + " done");
-	       }
-	    }
-	   reindexFacesAndVertices();
-	   if (debug)
-	    { System.out.println ("hull done");
-	    }
-	 }
+    computeMaxAndMin();
+    createInitialSimplex();
+    while ((eyeVtx = nextPointToAdd()) != null) {
+        addPointToHull(eyeVtx);
+        cnt++;
+        if (debug) {
+            System.out.println("iteration " + cnt + " done");
+        }
+    }
+    reindexFacesAndVertices();
+    if (debug) {
+        System.out.println("hull done");
+    }
+}
 
-QuickHull3D.prototype.markFaceVertices = function (face, mark)
-	 {
-	   var he0 = face.getFirstEdge();
-	   var he = he0;
-	   do
-	    { he.head().index = mark;
-	      he = he.next;
-	    }
-	   while (he != he0);
-	 }
+QuickHull3D.prototype.markFaceVertices = function(face, mark) {
+    var he0 = face.getFirstEdge();
+    var he = he0;
+    do {
+        he.head().index = mark;
+        he = he.next;
+    }
+    while (he != he0);
+}
 
-QuickHull3D.prototype.reindexFacesAndVertices = function()
-	 {
-	   for (var i=0; i<numPoints; i++)
-	    { pointBuffer[i].index = -1;
-	    }
-	   // remove inactive faces and mark active vertices
-	   numFaces = 0;
-	   for (var it=faces.iterator(); it.hasNext(); )
-	    { var face = (Face)it.next();
-	      if (face.mark != Face.VISIBLE)
-	       { it.remove();
-	       }
-	      else
-	       { markFaceVertices (face, 0);
-		 numFaces++;
-	       }
-	    }
-	   // reindex vertices
-	   numVertices = 0;
-	   for (var i=0; i<numPoints; i++)
-	    { var vtx = pointBuffer[i];
-	      if (vtx.index == 0)
-	       { vertexPointIndices[numVertices] = i;
-		 vtx.index = numVertices++;
-	       }
-	    }
-	 }
+QuickHull3D.prototype.reindexFacesAndVertices = function() {
+    for (var i = 0; i < numPoints; i++) {
+        pointBuffer[i].index = -1;
+    }
+    // remove inactive faces and mark active vertices
+    numFaces = 0;
+    for (var it = faces.iterator(); it.hasNext();) {
+        var face = (Face) it.next();
+        if (face.mark != Face.VISIBLE) {
+            it.remove();
+        } else {
+            markFaceVertices(face, 0);
+            numFaces++;
+        }
+    }
+    // reindex vertices
+    numVertices = 0;
+    for (var i = 0; i < numPoints; i++) {
+        var vtx = pointBuffer[i];
+        if (vtx.index == 0) {
+            vertexPointIndices[numVertices] = i;
+            vtx.index = numVertices++;
+        }
+    }
+}
 
-QuickHull3D.prototype.checkFaceConvexity = function (
-	   face, tol, ps)
-	 {
-	   var dist;
-	   var he = face.he0;
-	   do
-	    { face.checkConsistency();
-	      // make sure edge is convex
-	      dist = oppFaceDistance (he);
-	      if (dist > tol)
-	       { if (ps != null)
-		  { ps.println ("Edge " + he.getVertexString() +
-				" non-convex by " + dist);
-		  }
-		 return false;
-	       }
-	      dist = oppFaceDistance (he.opposite);
-	      if (dist > tol)
-	       { if (ps != null)
-		  { ps.println ("Opposite edge " +
-				he.opposite.getVertexString() +
-				" non-convex by " + dist);
-		  }
-		 return false;
-	       }
-	      if (he.next.oppositeFace() == he.oppositeFace())
-	       { if (ps != null)
-		  { ps.println ("Redundant vertex " + he.head().index +
-				" in face " + face.getVertexString());
-		  }
-		 return false;
-	       }
-	      he = he.next;
-	    }
-	   while (he != face.he0);
-	   return true;
-	 }
+QuickHull3D.prototype.checkFaceConvexity = function(
+    face, tol, ps) {
+    var dist;
+    var he = face.he0;
+    do {
+        face.checkConsistency();
+        // make sure edge is convex
+        dist = oppFaceDistance(he);
+        if (dist > tol) {
+            if (ps != null) {
+                ps.println("Edge " + he.getVertexString() +
+                    " non-convex by " + dist);
+            }
+            return false;
+        }
+        dist = oppFaceDistance(he.opposite);
+        if (dist > tol) {
+            if (ps != null) {
+                ps.println("Opposite edge " +
+                    he.opposite.getVertexString() +
+                    " non-convex by " + dist);
+            }
+            return false;
+        }
+        if (he.next.oppositeFace() == he.oppositeFace()) {
+            if (ps != null) {
+                ps.println("Redundant vertex " + he.head().index +
+                    " in face " + face.getVertexString());
+            }
+            return false;
+        }
+        he = he.next;
+    }
+    while (he != face.he0);
+    return true;
+}
 
-QuickHull3D.prototype.checkFaces = function(tol, ps)
-	 {
-	   // check edge convexity
-	   var convex = true;
-	   for (var it=faces.iterator(); it.hasNext(); )
-	    { var face = (Face)it.next();
-	      if (face.mark == Face.VISIBLE)
-	       { if (!checkFaceConvexity (face, tol, ps))
-		  { convex = false;
-		  }
-	       }
-	    }
-	   return convex;
-	 }
+QuickHull3D.prototype.checkFaces = function(tol, ps) {
+    // check edge convexity
+    var convex = true;
+    for (var it = faces.iterator(); it.hasNext();) {
+        var face = (Face) it.next();
+        if (face.mark == Face.VISIBLE) {
+            if (!checkFaceConvexity(face, tol, ps)) {
+                convex = false;
+            }
+        }
+    }
+    return convex;
+}
 
-	/**
-	 * Checks the correctness of the hull using the distance tolerance
-	 * returned by {@link QuickHull3D#getDistanceTolerance
-	 * getDistanceTolerance}; see
-	 * {@link QuickHull3D#check(PrintStream,double)
-	 * check(PrintStream,double)} for details.
-	 *
-	 * @param ps print stream for diagnostic messages; may be
-	 * set to <code>null</code> if no messages are desired.
-	 * @return true if the hull is valid
-	 * @see QuickHull3D#check(PrintStream,double)
-	 */
-QuickHull3D.prototype.check = function (ps)
-	 {
-	   return check (ps, getDistanceTolerance());
-	 }
+/**
+ * Checks the correctness of the hull using the distance tolerance
+ * returned by {@link QuickHull3D#getDistanceTolerance
+ * getDistanceTolerance}; see
+ * {@link QuickHull3D#check(PrintStream,double)
+ * check(PrintStream,double)} for details.
+ *
+ * @param ps print stream for diagnostic messages; may be
+ * set to <code>null</code> if no messages are desired.
+ * @return true if the hull is valid
+ * @see QuickHull3D#check(PrintStream,double)
+ */
+QuickHull3D.prototype.check = function(ps) {
+    return check(ps, getDistanceTolerance());
+}
 
-	/**
-	 * Checks the correctness of the hull. This is done by making sure that
-	 * no faces are non-convex and that no points are outside any face.
-	 * These tests are performed using the distance tolerance <i>tol</i>.
-	 * Faces are considered non-convex if any edge is non-convex, and an
-	 * edge is non-convex if the centroid of either adjoining face is more
-	 * than <i>tol</i> above the plane of the other face. Similarly,
-	 * a point is considered outside a face if its distance to that face's
-	 * plane is more than 10 times <i>tol</i>.
-	 *
-	 * <p>If the hull has been {@link #triangulate triangulated},
-	 * then this routine may fail if some of the resulting
-	 * triangles are very small or thin.
-	 *
-	 * @param ps print stream for diagnostic messages; may be
-	 * set to <code>null</code> if no messages are desired.
-	 * @param tol distance tolerance
-	 * @return true if the hull is valid
-	 * @see QuickHull3D#check(PrintStream)
-	 */
-QuickHull3D.prototype.check = function (ps, tol)
+/**
+ * Checks the correctness of the hull. This is done by making sure that
+ * no faces are non-convex and that no points are outside any face.
+ * These tests are performed using the distance tolerance <i>tol</i>.
+ * Faces are considered non-convex if any edge is non-convex, and an
+ * edge is non-convex if the centroid of either adjoining face is more
+ * than <i>tol</i> above the plane of the other face. Similarly,
+ * a point is considered outside a face if its distance to that face's
+ * plane is more than 10 times <i>tol</i>.
+ *
+ * <p>If the hull has been {@link #triangulate triangulated},
+ * then this routine may fail if some of the resulting
+ * triangles are very small or thin.
+ *
+ * @param ps print stream for diagnostic messages; may be
+ * set to <code>null</code> if no messages are desired.
+ * @param tol distance tolerance
+ * @return true if the hull is valid
+ * @see QuickHull3D#check(PrintStream)
+ */
+QuickHull3D.prototype.check = function(ps, tol)
 
-	 {
-	   // check to make sure all edges are fully connected
-	   // and that the edges are convex
-	   var dist;
-	   var pointTol = 10*tol;
+{
+    // check to make sure all edges are fully connected
+    // and that the edges are convex
+    var dist;
+    var pointTol = 10 * tol;
 
-	   if (!checkFaces(tolerance, ps))
-	    { return false;
-	    }
+    if (!checkFaces(tolerance, ps)) {
+        return false;
+    }
 
-	   // check point inclusion
+    // check point inclusion
 
-	   for (var i=0; i<numPoints; i++)
-	    { Point3d pnt = pointBuffer[i].pnt;
-	      for (var it=faces.iterator(); it.hasNext(); )
-	       { var face = (Face)it.next();
-		 if (face.mark == Face.VISIBLE)
-		  {
-		    dist = face.distanceToPlane (pnt);
-		    if (dist > pointTol)
-		     { if (ps != null)
-			{ ps.println (
-			     "Point " + i + " " + dist + " above face " +
-			     face.getVertexString());
-			}
-		       return false;
-		     }
-		  }
-	       }
-	    }
-	   return true;
-	 }
+    for (var i = 0; i < numPoints; i++) {
+        Point3d pnt = pointBuffer[i].pnt;
+        for (var it = faces.iterator(); it.hasNext();) {
+            var face = (Face) it.next();
+            if (face.mark == Face.VISIBLE) {
+                dist = face.distanceToPlane(pnt);
+                if (dist > pointTol) {
+                    if (ps != null) {
+                        ps.println(
+                            "Point " + i + " " + dist + " above face " +
+                            face.getVertexString());
+                    }
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
 }

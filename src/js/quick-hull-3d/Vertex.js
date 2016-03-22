@@ -32,19 +32,18 @@
  	Face face;
 */
 
-	/**
-	 * Constructs a vertex and sets its coordinates to 0.
-	 */
-function Vertex()
-	 { pnt = new Point3d();
-	 }
+/**
+ * Constructs a vertex and sets its coordinates to 0.
+ */
+function Vertex() {
+    pnt = new Point3d();
+}
 
-	/**
-	 * Constructs a vertex with the specified coordinates
-	 * and index.
-	 */
-function Vertex (x, y, z, idx)
-	 {
-	   pnt = new Point3d(x, y, z);
-	   index = idx;
-	 }
+/**
+ * Constructs a vertex with the specified coordinates
+ * and index.
+ */
+function Vertex(x, y, z, idx) {
+    pnt = new Point3d(x, y, z);
+    index = idx;
+}
