@@ -1,17 +1,16 @@
-package cindyjs.quickhull3d;
-
 /**
  * Maintains a double-linked list of vertices for use by QuickHull3D
  */
-class VertexList
-{
-	private Vertex head;
-	private Vertex tail;
+
+/* members
+	Vertex head;
+	Vertex tail;
+*/
 
 	/**
 	 * Clears this list.
 	 */
-	public void clear()
+VertexList.prototype.clear = function()
 	 {
 	   head = tail = null; 
 	 }
@@ -19,7 +18,7 @@ class VertexList
 	/**
 	 * Adds a vertex to the end of this list.
 	 */
-	public void add (Vertex vtx)
+VertexList.prototype.add = function (vtx)
 	 { 
 	   if (head == null)
 	    { head = vtx;
@@ -35,7 +34,7 @@ class VertexList
 	/**
 	 * Adds a chain of vertices to the end of this list.
 	 */
-	public void addAll (Vertex vtx)
+VertexList.prototype.addAll = function (vtx)
 	 { 
 	   if (head == null)
 	    { head = vtx;
@@ -53,7 +52,7 @@ class VertexList
 	/**
 	 * Deletes a vertex from this list.
 	 */
-	public void delete (Vertex vtx)
+VertexList.prototype.delete = function (vtx)
 	 {
 	   if (vtx.prev == null)
 	    { head = vtx.next;
@@ -72,7 +71,7 @@ class VertexList
 	/**
 	 * Deletes a chain of vertices from this list.
 	 */
-	public void delete (Vertex vtx1, Vertex vtx2)
+VertexList.prototype.delete = function (vtx1, vtx2)
 	 {
 	   if (vtx1.prev == null)
 	    { head = vtx2.next;
@@ -92,7 +91,7 @@ class VertexList
 	 * Inserts a vertex into this list before another
 	 * specificed vertex.
 	 */
-	public void insertBefore (Vertex vtx, Vertex next)
+VertexList.prototype.insertBefore = function (vtx, next)
 	 {
 	   vtx.prev = next.prev;
 	   if (next.prev == null)
@@ -108,7 +107,7 @@ class VertexList
 	/**
 	 * Returns the first element in this list.
 	 */
-	public Vertex first()
+VertexList.prototype.first = function()
 	 {
 	   return head;
 	 }
@@ -116,8 +115,7 @@ class VertexList
 	/**
 	 * Returns true if this list is empty.
 	 */
-	public boolean isEmpty()
+VertexList.prototype.isEmpty = function()
 	 {
 	   return head == null;
 	 }
-}

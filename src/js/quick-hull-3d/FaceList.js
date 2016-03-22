@@ -1,17 +1,16 @@
-package cindyjs.quickhull3d;
-
 /**
  * Maintains a single-linked list of faces for use by QuickHull3D
  */
-class FaceList
-{
-	private Face head;
-	private Face tail;
+
+/* members
+	Face head;
+	Face tail;
+*/
 
 	/**
 	 * Clears this list.
 	 */
-	public void clear()
+FaceList.prototype.clear = function()
 	 {
 	   head = tail = null; 
 	 }
@@ -19,7 +18,7 @@ class FaceList
 	/**
 	 * Adds a vertex to the end of this list.
 	 */
-	public void add (Face vtx)
+FaceList.prototype.add = function (vtx)
 	 { 
 	   if (head == null)
 	    { head = vtx;
@@ -31,7 +30,7 @@ class FaceList
 	   tail = vtx;
 	 }
 
-	public Face first()
+FaceList.prototype.first = function()
 	 {
 	   return head;
 	 }
@@ -39,8 +38,7 @@ class FaceList
 	/**
 	 * Returns true if this list is empty.
 	 */
-	public boolean isEmpty()
+FaceList.prototype.isEmpty = function()
 	 {
 	   return head == null;
 	 }
-}

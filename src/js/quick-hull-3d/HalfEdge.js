@@ -12,40 +12,39 @@
   * software.
   */
 
-package cindyjs.quickhull3d;
-
 /**
  * Represents the half-edges that surround each
  * face in a counter-clockwise direction.
  *
  * @author John E. Lloyd, Fall 2004 */
-class HalfEdge
-{
+
+/* members
 	/**
 	 * The vertex associated with the head of this half-edge.
-	 */
+	 * /
 	Vertex vertex;
 
 	/**
 	 * Triangular face associated with this half-edge.
-	 */
+	 * /
 	Face face;
 
 	/**
 	 * Next half-edge in the triangle.
-	 */
+	 * /
 	HalfEdge next;
 
 	/**
 	 * Previous half-edge in the triangle.
-	 */
+	 * /
 	HalfEdge prev;
 
 	/**
 	 * Half-edge associated with the opposite triangle
 	 * adjacent to this edge.
-	 */
+	 * /
 	HalfEdge opposite;
+*/
 
 	/**
 	 * Constructs a HalfEdge with head vertex <code>v</code> and
@@ -54,13 +53,13 @@ class HalfEdge
 	 * @param v head vertex
 	 * @param f left-hand triangular face
 	 */
-	public HalfEdge (Vertex v, Face f)
+function HalfEdge (Vertex v, Face f)
 	 {
 	   vertex = v;
 	   face = f;
 	 }
 
-	public HalfEdge ()
+function HalfEdge ()
 	 { 
 	 }
 
@@ -69,7 +68,7 @@ class HalfEdge
 	 * (counter-clockwise) to this one within the triangle.
 	 *
 	 * @param edge next adjacent edge */
-	public void setNext (HalfEdge edge)
+HalfEdge.prototype.setNext = function (edge)
 	 {
 	   next = edge;
 	 }
@@ -79,7 +78,7 @@ class HalfEdge
 	 * (counter-clockwise) to this one within the triangle.
 	 *
 	 * @return next adjacent edge */
-	public HalfEdge getNext()
+HalfEdge.prototype.getNext = function()
 	 {
 	   return next;
 	 }
@@ -89,7 +88,7 @@ class HalfEdge
 	 * this one within the triangle.
 	 *
 	 * @param edge previous adjacent edge */
-	public void setPrev (HalfEdge edge)
+HalfEdge.prototype.setPrev = function (edge)
 	 {
 	   prev = edge;
 	 }
@@ -100,7 +99,7 @@ class HalfEdge
 	 *
 	 * @return previous adjacent edge
 	 */
-	public HalfEdge getPrev()
+HalfEdge.prototype.getPrev = function()
 	 {
 	   return prev;
 	 }
@@ -111,7 +110,7 @@ class HalfEdge
 	 *
 	 * @return left-hand triangular face
 	 */
-	public Face getFace()
+HalfEdge.prototype.getFace = function()
 	 {
 	   return face;
 	 }
@@ -121,7 +120,7 @@ class HalfEdge
 	 *
 	 * @return opposite half-edge
 	 */
-	public HalfEdge getOpposite()
+HalfEdge.prototype.getOpposite = function()
 	 {
 	   return opposite;
 	 }
@@ -131,7 +130,7 @@ class HalfEdge
 	 *
 	 * @param edge opposite half-edge
 	 */
-	public void setOpposite (HalfEdge edge)
+HalfEdge.prototype.setOpposite = function (edge)
 	 {
 	   opposite = edge;
 	   edge.opposite = this;
@@ -142,7 +141,7 @@ class HalfEdge
 	 *
 	 * @return head vertex
 	 */
-	public Vertex head()
+HalfEdge.prototype.head = function()
 	 {
 	   return vertex;
 	 }
@@ -152,7 +151,7 @@ class HalfEdge
 	 *
 	 * @return tail vertex
 	 */
-	public Vertex tail()
+HalfEdge.prototype.tail = function()
 	 {
 	   return prev != null ? prev.vertex : null;
 	 }
@@ -163,7 +162,7 @@ class HalfEdge
 	 *
 	 * @return opposite triangular face
 	 */
-	public Face oppositeFace()
+HalfEdge.prototype.oppositeFace = function()
 	 {
 	   return opposite != null ? opposite.face : null;
 	 }
@@ -174,7 +173,7 @@ class HalfEdge
 	 *
 	 * @return identifying string
 	 */
-	public String getVertexString()
+HalfEdge.prototype.getVertexString = function()
 	 {
 	   if (tail() != null)
 	    { return "" +
@@ -191,7 +190,7 @@ class HalfEdge
 	 *
 	 * @return half-edge length
 	 */
-	public double length()
+HalfEdge.prototype.length = function()
 	 {
 	   if (tail() != null)
 	    { return head().pnt.distance(tail().pnt);
@@ -206,7 +205,7 @@ class HalfEdge
 	 *
 	 * @return half-edge length squared
 	 */
-	public double lengthSquared()
+HalfEdge.prototype.lengthSquared = function()
 	 {
 	   if (tail() != null)
 	    { return head().pnt.distanceSquared(tail().pnt);
@@ -215,33 +214,4 @@ class HalfEdge
 	    { return -1; 
 	    }
 	 }
-
-
-// 	/**
-// 	 * Computes nrml . (del0 X del1), where del0 and del1
-// 	 * are the direction vectors along this halfEdge, and the
-// 	 * halfEdge he1.
-// 	 *
-// 	 * A product > 0 indicates a left turn WRT the normal
-// 	 */
-// 	public double turnProduct (HalfEdge he1, Vector3d nrml)
-// 	 { 
-// 	   Point3d pnt0 = tail().pnt;
-// 	   Point3d pnt1 = head().pnt;
-// 	   Point3d pnt2 = he1.head().pnt;
-
-// 	   double del0x = pnt1.x - pnt0.x;
-// 	   double del0y = pnt1.y - pnt0.y;
-// 	   double del0z = pnt1.z - pnt0.z;
-
-// 	   double del1x = pnt2.x - pnt1.x;
-// 	   double del1y = pnt2.y - pnt1.y;
-// 	   double del1z = pnt2.z - pnt1.z;
-
-// 	   return (nrml.x*(del0y*del1z - del0z*del1y) + 
-// 		   nrml.y*(del0z*del1x - del0x*del1z) + 
-// 		   nrml.z*(del0x*del1y - del0y*del1x));
-// 	 }
-}
-
 

@@ -10,10 +10,6 @@
   * whatsoever, arising out of or in connection with the use of this
   * software.
   */
-package cindyjs.quickhull3d;
-
-import java.util.*;
-import java.io.*;
 
 /**
  * Computes the convex hull of a set of three dimensional points.
@@ -111,65 +107,84 @@ import java.io.*;
  * IllegalArgumentException will be thrown.
  *
  * @author John E. Lloyd, Fall 2004 */
-public class QuickHull3D
-{
+
 	/**
 	 * Specifies that (on output) vertex indices for a face should be
 	 * listed in clockwise order.
 	 */
-	public static final int CLOCKWISE = 0x1;
+QuickHull3D.CLOCKWISE = 0x1;
 
 	/**
 	 * Specifies that (on output) the vertex indices for a face should be
 	 * numbered starting from 1.
 	 */
-	public static final int INDEXED_FROM_ONE = 0x2;
+QuickHull3D.INDEXED_FROM_ONE = 0x2;
 
 	/**
 	 * Specifies that (on output) the vertex indices for a face should be
 	 * numbered starting from 0.
 	 */
-	public static final int INDEXED_FROM_ZERO = 0x4;
+QuickHull3D.INDEXED_FROM_ZERO = 0x4;
 
 	/**
 	 * Specifies that (on output) the vertex indices for a face should be
 	 * numbered with respect to the original input points.
 	 */
-	public static final int POINT_RELATIVE = 0x8;
+QuickHull3D.POINT_RELATIVE = 0x8;
 
 	/**
 	 * Specifies that the distance tolerance should be
 	 * computed automatically from the input point data.
 	 */
-	public static final double AUTOMATIC_TOLERANCE = -1;
+QuickHull3D.AUTOMATIC_TOLERANCE = -1;
 
-	protected int findIndex = -1;
+	/**
+	 * Creates an empty convex hull object.
+	 */
+function QuickHull3D ()
+	 }
+
+	/**
+	 * Creates a convex hull object and initializes it to the convex hull
+	 * of a set of points.
+	 *
+	 * @param points input points.
+	 * @throws IllegalArgumentException the number of input points is less
+	 * than four, or the points appear to be coincident, colinear, or
+	 * coplanar.
+	 */
+function QuickHull3D (Point3d[] points)
+	 {
+	int findIndex = -1;
 
 	// estimated size of the point set
-	protected double charLength;
+	double charLength;
 
-	protected boolean debug = false;
+	boolean debug = false;
 
-	protected Vertex[] pointBuffer = new Vertex[0];
-	protected int[] vertexPointIndices = new int[0];
-	private Face[] discardedFaces = new Face[3];
+	Vertex[] pointBuffer = new Vertex[0];
+	int[] vertexPointIndices = new int[0];
+	Face[] discardedFaces = new Face[3];
 
-	private Vertex[] maxVtxs = new Vertex[3];
-	private Vertex[] minVtxs = new Vertex[3];
+	Vertex[] maxVtxs = new Vertex[3];
+	Vertex[] minVtxs = new Vertex[3];
 
-	protected Vector faces = new Vector(16);
-	protected Vector horizon = new Vector(16);
+	Vector faces = new Vector(16);
+	Vector horizon = new Vector(16);
 
-	private FaceList newFaces = new FaceList();
-	private VertexList unclaimed = new VertexList();
-	private VertexList claimed = new VertexList();
+	FaceList newFaces = new FaceList();
+	VertexList unclaimed = new VertexList();
+	VertexList claimed = new VertexList();
 
-	protected int numVertices;
-	protected int numFaces;
-	protected int numPoints;
+	int numVertices;
+	int numFaces;
+	int numPoints;
 
-	protected double explicitTolerance = AUTOMATIC_TOLERANCE;
-	protected double tolerance;
+	double explicitTolerance = AUTOMATIC_TOLERANCE;
+	double tolerance;
+
+	   build (points, points.length);
+	 }
 
 	/**
 	 * Returns true if debugging is enabled.
@@ -177,7 +192,7 @@ public class QuickHull3D
 	 * @return true is debugging is enabled
 	 * @see QuickHull3D#setDebug
 	 */
-	public boolean getDebug()
+QuickHull3D.prototype.getDebug = function()
 	 {
 	   return debug;
 	 }
@@ -187,7 +202,7 @@ public class QuickHull3D
 	 *
 	 * @param enable if true, enables debugging
 	 */
-	public void setDebug (boolean enable)
+QuickHull3D.prototype.setDebug = function (enable)
 	 { 
 	   debug = enable;
 	 }
@@ -195,7 +210,7 @@ public class QuickHull3D
 	/**
 	 * Precision of a double.
 	 */
-	static private final double DOUBLE_PREC = 2.2204460492503131e-16;
+QuickHull3D.DOUBLE_PREC = 2.2204460492503131e-16;
 
 
 	/**
@@ -210,7 +225,7 @@ public class QuickHull3D
 	 * @return distance tolerance
 	 * @see QuickHull3D#setExplicitDistanceTolerance
 	 */
-	public double getDistanceTolerance()
+QuickHull3D.prototype.getDistanceTolerance = function()
 	 {
 	   return tolerance;
 	 }
@@ -224,7 +239,7 @@ public class QuickHull3D
 	 * @param tol explicit tolerance
 	 * @see #getDistanceTolerance
 	 */
-	public void setExplicitDistanceTolerance(double tol)
+QuickHull3D.prototype.setExplicitDistanceTolerance = function(tol)
 	 { 
 	   explicitTolerance = tol;
 	 }
@@ -235,12 +250,12 @@ public class QuickHull3D
 	 * @return explicit tolerance
 	 * @see #setExplicitDistanceTolerance
 	 */
-	public double getExplicitDistanceTolerance()
+QuickHull3D.prototype.getExplicitDistanceTolerance = function()
 	 {
 	   return explicitTolerance;
 	 }
 
-	private void addPointToFace (Vertex vtx, Face face)
+QuickHull3D.prototype.addPointToFace = function (vtx, face)
 	 {
 	   vtx.face = face;
 
@@ -253,7 +268,7 @@ public class QuickHull3D
 	   face.outside = vtx;
 	 }
 
-	private void removePointFromFace (Vertex vtx, Face face)
+QuickHull3D.prototype.removePointFromFace = function (vtx, face)
 	 {
 	   if (vtx == face.outside)
 	    { if (vtx.next != null && vtx.next.face == face)
@@ -266,7 +281,7 @@ public class QuickHull3D
 	   claimed.delete (vtx);
 	 }
 
-	private Vertex removeAllPointsFromFace (Face face)
+QuickHull3D.prototype.removeAllPointsFromFace = function (face)
 	 {
 	   if (face.outside != null)
 	    { 
@@ -284,13 +299,6 @@ public class QuickHull3D
 	 }
 
 	/**
-	 * Creates an empty convex hull object.
-	 */
-	public QuickHull3D ()
-	 { 
-	 }
-
-	/**
 	 * Creates a convex hull object and initializes it to the convex hull
 	 * of a set of points whose coordinates are given by an
 	 * array of doubles.
@@ -302,28 +310,12 @@ public class QuickHull3D
 	 * than four, or the points appear to be coincident, colinear, or
 	 * coplanar.
 	 */
-	public QuickHull3D (double[] coords)
-	   throws IllegalArgumentException
+QuickHull3D.prototype.QuickHull3D = function (coords)
 	 {
 	   build (coords, coords.length/3);
 	 }
 
-	/**
-	 * Creates a convex hull object and initializes it to the convex hull
-	 * of a set of points.
-	 *
-	 * @param points input points.
-	 * @throws IllegalArgumentException the number of input points is less
-	 * than four, or the points appear to be coincident, colinear, or
-	 * coplanar.
-	 */
-	public QuickHull3D (Point3d[] points)
-	   throws IllegalArgumentException
-	 {
-	   build (points, points.length);
-	 }
-
-	private HalfEdge findHalfEdge (Vertex tail, Vertex head)
+QuickHull3D.prototype.findHalfEdge = function (tail, head)
 	 { 
 	   // brute force ... OK, since setHull is not used much
 	   for (Iterator it=faces.iterator(); it.hasNext(); ) 
@@ -335,7 +327,7 @@ public class QuickHull3D
 	   return null;
 	 }
 
- 	protected void setHull (double[] coords, int nump,
+QuickHull3D.prototype.setHull (double[] coords, int nump,
 				int[][] faceIndices, int numf)
  	 {
  	   initBuffers (nump);
@@ -356,91 +348,7 @@ public class QuickHull3D
 	    }
  	 }
 
-	/* Disabled for GWT
-
-	private void printQhullErrors (Process proc)
-	   throws IOException
-	 {
-	   boolean wrote = false;
-	   InputStream es = proc.getErrorStream();
-	   while (es.available() > 0)
-	    { System.out.write (es.read());
-	      wrote = true;
-	    }
-	   if (wrote)
-	    { System.out.println("");
-	    }
-	 }
-
-	protected void setFromQhull (double[] coords, int nump,
-				     boolean triangulate)
-	 {
-	   String commandStr = "./qhull i";
-	   if (triangulate)
-	    { commandStr += " -Qt"; 
-	    }
-	   try
-	    { 
-	      Process proc = Runtime.getRuntime().exec (commandStr);
-	      PrintStream ps = new PrintStream (proc.getOutputStream());
-	      StreamTokenizer stok =
-		 new StreamTokenizer (
-		    new InputStreamReader (proc.getInputStream()));
-
-	      ps.println ("3 " + nump);
-	      for (int i=0; i<nump; i++)
-	       { ps.println (
-		    coords[i*3+0] + " " +
-		    coords[i*3+1] + " " +  
-		    coords[i*3+2]);
-	       }
-	      ps.flush();
-	      ps.close();
-	      Vector indexList = new Vector(3);
-	      stok.eolIsSignificant(true);
-	      printQhullErrors (proc);
-	      
-	      do
-	       { stok.nextToken();
-	       }
-	      while (stok.sval == null ||
-		     !stok.sval.startsWith ("MERGEexact"));
-	      for (int i=0; i<4; i++)
-	       { stok.nextToken();
-	       }
-	      if (stok.ttype != StreamTokenizer.TT_NUMBER)
-	       { System.out.println ("Expecting number of faces");
-		 System.exit(1); 
-	       }
-	      int numf = (int)stok.nval;
-	      stok.nextToken(); // clear EOL
-	      int[][] faceIndices = new int[numf][];
-	      for (int i=0; i<numf; i++)
-	       { indexList.clear();
-		 while (stok.nextToken() != StreamTokenizer.TT_EOL)
-		  { if (stok.ttype != StreamTokenizer.TT_NUMBER)
-		     { System.out.println ("Expecting face index");
-		       System.exit(1); 
-		     }
-		    indexList.add (0, new Integer((int)stok.nval));
-		  }
-		 faceIndices[i] = new int[indexList.size()];
-		 int k = 0;
-		 for (Iterator it=indexList.iterator(); it.hasNext(); ) 
-		  { faceIndices[i][k++] = ((Integer)it.next()).intValue();
-		  }
-	       }
-	      setHull (coords, nump, faceIndices, numf);
-	    }
-	   catch (Exception e) 
-	    { e.printStackTrace();
-	      System.exit(1); 
-	    }
-	 }
-
-	*/
-
-	private void printPoints (PrintStream ps)
+QuickHull3D.prototype.printPoints = function (ps)
 	 {
 	   for (int i=0; i<numPoints; i++)
 	    { Point3d pnt = pointBuffer[i].pnt;
@@ -459,8 +367,7 @@ public class QuickHull3D
 	 * than four, or the points appear to be coincident, colinear, or
 	 * coplanar.
 	 */
-	public void build (double[] coords)
-	   throws IllegalArgumentException
+QuickHull3D.prototype.build = function (coords)
 	 {
 	   build (coords, coords.length/3);
 	 }
@@ -478,8 +385,7 @@ public class QuickHull3D
 	 * or the points appear to be coincident, colinear, or
 	 * coplanar.
 	 */
-	public void build (double[] coords, int nump)
-	   throws IllegalArgumentException
+QuickHull3D.prototype.build = function (coords, nump)
 	 {
 	   if (nump < 4)
 	    { throw new IllegalArgumentException (
@@ -502,8 +408,7 @@ public class QuickHull3D
 	 * than four, or the points appear to be coincident, colinear, or
 	 * coplanar.
 	 */
-	public void build (Point3d[] points)
-	   throws IllegalArgumentException
+QuickHull3D.prototype.build = function (points)
 	 {
 	   build (points, points.length);
 	 }
@@ -517,8 +422,7 @@ public class QuickHull3D
 	 * than four or greater then the length of <code>points</code>, or the
 	 * points appear to be coincident, colinear, or coplanar.
 	 */
-	public void build (Point3d[] points, int nump)
-	   throws IllegalArgumentException
+QuickHull3D.prototype.build = function (points, nump)
 	 {
 	   if (nump < 4)
 	    { throw new IllegalArgumentException (
@@ -539,7 +443,7 @@ public class QuickHull3D
 	 * and hence appear to be non-convex (this same limitation is present
 	 * in <a href=http://www.qhull.org>qhull</a>).
 	 */
-	public void triangulate ()
+QuickHull3D.prototype.triangulate = function ()
 	 {
 	   double minArea = 1000*charLength*DOUBLE_PREC;
 	   newFaces.clear();
@@ -556,17 +460,7 @@ public class QuickHull3D
 	    }
 	 }
 
-// 	private void splitFace (Face face)
-// 	 {
-//  	   Face newFace = face.split();
-//  	   if (newFace != null)
-//  	    { newFaces.add (newFace);
-//  	      splitFace (newFace);
-//  	      splitFace (face);
-//  	    }
-// 	 }
-
-	protected void initBuffers (int nump)
+QuickHull3D.prototype.initBuffers = function (nump)
 	 {
 	   if (pointBuffer.length < nump)
 	    { Vertex[] newBuffer = new Vertex[nump];
@@ -585,7 +479,7 @@ public class QuickHull3D
 	   numPoints = nump;
 	 }
 
-	protected void setPoints (double[] coords, int nump)
+QuickHull3D.prototype.setPoints = function (coords, nump)
 	 { 
 	   for (int i=0; i<nump; i++)
 	    { 
@@ -595,7 +489,7 @@ public class QuickHull3D
 	    }
 	 }
 
-	protected void setPoints (Point3d[] pnts, int nump)
+QuickHull3D.prototype.setPoints = function (pnts, nump)
 	 { 
 	   for (int i=0; i<nump; i++)
 	    { 
@@ -605,7 +499,7 @@ public class QuickHull3D
 	    }
 	 }
 
-	protected void computeMaxAndMin ()
+QuickHull3D.prototype.computeMaxAndMin = function ()
 	 {
 	   Vector3d max = new Vector3d();
 	   Vector3d min = new Vector3d();
@@ -662,8 +556,7 @@ public class QuickHull3D
 	/**
 	 * Creates the initial simplex from which the hull will be built.
 	 */
-	protected void createInitialSimplex ()
-	   throws IllegalArgumentException
+QuickHull3D.prototype.createInitialSimplex = function ()
 	 {
 	   double max = 0;
 	   int imax = 0;
@@ -799,7 +692,7 @@ public class QuickHull3D
 	 *
 	 * @return number of vertices
 	 */
-	public int getNumVertices()
+QuickHull3D.prototype.getNumVertices = function()
 	 {
 	   return numVertices;
 	 }
@@ -811,7 +704,7 @@ public class QuickHull3D
 	 * @see QuickHull3D#getVertices(double[])
 	 * @see QuickHull3D#getFaces()
 	 */
- 	public Point3d[] getVertices()
+QuickHull3D.prototype.getVertices = function()
  	 {
  	   Point3d[] vtxs = new Point3d[numVertices];
  	   for (int i=0; i<numVertices; i++)
@@ -830,7 +723,7 @@ public class QuickHull3D
 	 * @see QuickHull3D#getVertices()
 	 * @see QuickHull3D#getFaces()
 	 */
- 	public int getVertices(double[] coords)
+ 	int getVertices(double[] coords)
  	 {
  	   for (int i=0; i<numVertices; i++)
 	    { Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
@@ -847,7 +740,7 @@ public class QuickHull3D
 	 *
 	 * @return vertex indices with respect to the original points
 	 */
-	public int[] getVertexPointIndices()
+QuickHull3D.prototype.getVertexPointIndices = function()
 	 { 
 	   int[] indices = new int[numVertices];
 	   for (int i=0; i<numVertices; i++)
@@ -861,7 +754,7 @@ public class QuickHull3D
 	 *
 	 * @return number of faces
 	 */
-	public int getNumFaces()
+QuickHull3D.prototype.getNumFaces = function()
 	 { 
 	   return faces.size();
 	 }
@@ -882,7 +775,7 @@ public class QuickHull3D
 	 * @see QuickHull3D#getVertices()
 	 * @see QuickHull3D#getFaces(int)
 	 */
-	public int[][] getFaces ()
+QuickHull3D.prototype.getFaces = function ()
 	 {
 	   return getFaces(0);
 	 }
@@ -904,7 +797,7 @@ public class QuickHull3D
 	 * indices for each face.
 	 * @see QuickHull3D#getVertices()
 	 */
-	public int[][] getFaces (int indexFlags)
+QuickHull3D.prototype.getFaces = function (indexFlags)
 	 {
 	   int[][] allFaces = new int[faces.size()][];
 	   int k = 0;
@@ -938,7 +831,7 @@ public class QuickHull3D
 	 * @see QuickHull3D#getVertices()
 	 * @see QuickHull3D#getFaces()
 	 */
-	public void print (PrintStream ps)
+QuickHull3D.prototype.print = function (ps)
 	 {
 	   print (ps, 0);
 	 }
@@ -964,7 +857,7 @@ public class QuickHull3D
 	 * @see QuickHull3D#getVertices()
 	 * @see QuickHull3D#getFaces()
 	 */
-	public void print (PrintStream ps, int indexFlags)
+QuickHull3D.prototype.print = function (ps, indexFlags)
 	 {
 	   if ((indexFlags & INDEXED_FROM_ZERO) == 0)
 	    { indexFlags |= INDEXED_FROM_ONE;
@@ -986,7 +879,7 @@ public class QuickHull3D
 	    }
 	 }
 
-	private void getFaceIndices (int[] indices, Face face, int flags)
+QuickHull3D.prototype.getFaceIndices = function (indices, face, flags)
 	 { 
 	   boolean ccw = ((flags & CLOCKWISE) == 0);
 	   boolean indexedFromOne = ((flags & INDEXED_FROM_ONE) != 0);
@@ -1008,7 +901,7 @@ public class QuickHull3D
 	   while (hedge != face.he0);	   
 	 }
 
-	protected void resolveUnclaimedPoints (FaceList newFaces)
+QuickHull3D.prototype.resolveUnclaimedPoints = function (newFaces)
 	 {
 	   Vertex vtxNext = unclaimed.first();
  	   for (Vertex vtx=vtxNext; vtx!=null; vtx=vtxNext)
@@ -1046,7 +939,7 @@ public class QuickHull3D
 	    }
 	 }
 
-	protected void deleteFacePoints (Face face, Face absorbingFace)
+QuickHull3D.prototype.deleteFacePoints = function (face, absorbingFace)
 	 {
 	   Vertex faceVtxs = removeAllPointsFromFace (face);
 	   if (faceVtxs != null)
@@ -1072,15 +965,15 @@ public class QuickHull3D
 	    }
 	 }
 
-	private static final int NONCONVEX_WRT_LARGER_FACE = 1;
-	private static final int NONCONVEX = 2;
+QuickHull3D.NONCONVEX_WRT_LARGER_FACE = 1;
+QuickHull3D.NONCONVEX = 2;
 
-	protected double oppFaceDistance (HalfEdge he)
+QuickHull3D.prototype.oppFaceDistance = function (he)
 	 {
 	   return he.face.distanceToPlane (he.opposite.face.getCentroid());
 	 }
 
-	private boolean doAdjacentMerge (Face face, int mergeType)
+QuickHull3D.prototype.doAdjacentMerge = function (face, mergeType)
 	 {
 	   HalfEdge hedge = face.he0;
 
@@ -1145,8 +1038,8 @@ public class QuickHull3D
 	   return false;
 	 }
 
-	protected void calculateHorizon (
-	   Point3d eyePnt, HalfEdge edge0, Face face, Vector horizon)
+QuickHull3D.prototype.calculateHorizon = function (
+	   eyePnt, edge0, face, horizon)
 	 {
 //	   oldFaces.add (face);
 	   deleteFacePoints (face, null);
@@ -1182,8 +1075,8 @@ public class QuickHull3D
 	   while (edge != edge0);
 	 }
 
-	private HalfEdge addAdjoiningFace (
-	   Vertex eyeVtx, HalfEdge he)
+QuickHull3D.prototype.addAdjoiningFace = function (
+	   eyeVtx, he)
 	 { 
 	   Face face = Face.createTriangle (
 	      eyeVtx, he.tail(), he.head());
@@ -1192,8 +1085,8 @@ public class QuickHull3D
 	   return face.getEdge(0);
 	 }
 
-	protected void addNewFaces (
-	   FaceList newFaces, Vertex eyeVtx, Vector horizon)
+QuickHull3D.prototype.addNewFaces = function (
+	   newFaces, eyeVtx, horizon)
 	 { 
 	   newFaces.clear();
 
@@ -1219,7 +1112,7 @@ public class QuickHull3D
 	   hedgeSideBegin.next.setOpposite (hedgeSidePrev);
 	 }
 
-	protected Vertex nextPointToAdd()
+QuickHull3D.prototype.nextPointToAdd = function()
 	 {
 	   if (!claimed.isEmpty())
 	    { Face eyeFace = claimed.first().face;
@@ -1241,7 +1134,7 @@ public class QuickHull3D
 	    }
 	 }
 	
-	protected void addPointToHull(Vertex eyeVtx)
+QuickHull3D.prototype.addPointToHull = function(eyeVtx)
 	 {
 	     horizon.clear();
 	     unclaimed.clear();
@@ -1280,7 +1173,7 @@ public class QuickHull3D
 	     resolveUnclaimedPoints(newFaces);
 	 }
 
-	protected void buildHull ()
+QuickHull3D.prototype.buildHull = function ()
 	 {
 	   int cnt = 0;
 	   Vertex eyeVtx;
@@ -1300,7 +1193,7 @@ public class QuickHull3D
 	    }
 	 }
 
-	private void markFaceVertices (Face face, int mark)
+QuickHull3D.prototype.markFaceVertices = function (face, mark)
 	 {
 	   HalfEdge he0 = face.getFirstEdge();
 	   HalfEdge he = he0;
@@ -1311,7 +1204,7 @@ public class QuickHull3D
 	   while (he != he0);
 	 }
 
-	protected void reindexFacesAndVertices()
+QuickHull3D.prototype.reindexFacesAndVertices = function()
 	 { 
 	   for (int i=0; i<numPoints; i++)
 	    { pointBuffer[i].index = -1; 
@@ -1339,8 +1232,8 @@ public class QuickHull3D
 	    }
 	 }
 
-	protected boolean checkFaceConvexity (
-	   Face face, double tol, PrintStream ps)
+QuickHull3D.prototype.checkFaceConvexity = function (
+	   face, tol, ps)
 	 {
 	   double dist;
 	   HalfEdge he = face.he0;
@@ -1377,7 +1270,7 @@ public class QuickHull3D
 	   return true;
 	 }
 
-	protected boolean checkFaces(double tol, PrintStream ps)
+QuickHull3D.prototype.checkFaces = function(tol, ps)
 	 { 
 	   // check edge convexity
 	   boolean convex = true;
@@ -1404,7 +1297,7 @@ public class QuickHull3D
 	 * @return true if the hull is valid
 	 * @see QuickHull3D#check(PrintStream,double)
 	 */
-	public boolean check (PrintStream ps)
+QuickHull3D.prototype.check = function (ps)
 	 {
 	   return check (ps, getDistanceTolerance());
 	 }
@@ -1429,7 +1322,7 @@ public class QuickHull3D
 	 * @return true if the hull is valid
 	 * @see QuickHull3D#check(PrintStream)
 	 */
-	public boolean check (PrintStream ps, double tol)
+QuickHull3D.prototype.check = function (ps, tol)
 
 	 {
 	   // check to make sure all edges are fully connected

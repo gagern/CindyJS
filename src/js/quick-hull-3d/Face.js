@@ -12,10 +12,6 @@
   * software.
   */
 
-package cindyjs.quickhull3d;
-
-import java.util.*;
-
 /**
  * Basic triangular face used to form the hull.
  *
@@ -25,27 +21,28 @@ import java.util.*;
  * counter-clockwise direction.
  *
  * @author John E. Lloyd, Fall 2004 */
-class Face
-{
+
+/* members
 	HalfEdge he0;
-	private Vector3d normal;
+	Vector3d normal;
 	double area;
-	private Point3d centroid;
+	Point3d centroid;
 	double planeOffset;
 	int index;
 	int numVerts;
 
 	Face next;
 
-	static final int VISIBLE = 1;
-	static final int NON_CONVEX = 2;
-	static final int DELETED = 3;
-
 	int mark = VISIBLE;
 
 	Vertex outside;
+*/
 
-	public void computeCentroid (Point3d centroid)
+Face.VISIBLE = 1;
+Face.NON_CONVEX = 2;
+Face.DELETED = 3;
+
+Face.prototype.computeCentroid = function (centroid)
 	 {
 	   centroid.setZero();
 	   HalfEdge he = he0;
@@ -57,7 +54,7 @@ class Face
 	   centroid.scale (1/(double)numVerts);
 	 }
 
-	public void computeNormal (Vector3d normal, double minArea)
+Face.prototype.computeNormal = function (normal, minArea)
 	 {
 	   computeNormal(normal);
 
@@ -94,7 +91,7 @@ class Face
 	    }
 	 }
 
-	public void computeNormal (Vector3d normal)
+Face.prototype.computeNormal = function (normal)
 	 {
 	   HalfEdge he1 = he0.next;
 	   HalfEdge he2 = he1.next;
@@ -133,7 +130,7 @@ class Face
 	   normal.scale (1/area);
 	 }
 
-	private void computeNormalAndCentroid()
+Face.prototype.computeNormalAndCentroid = function()
 	 {
 	   computeNormal (normal);
 	   computeCentroid (centroid);
@@ -151,14 +148,14 @@ class Face
 	    }
 	 }
 
-	private void computeNormalAndCentroid(double minArea)
+Face.prototype.computeNormalAndCentroid = function(minArea)
 	 {
 	   computeNormal (normal, minArea);
 	   computeCentroid (centroid);
 	   planeOffset = normal.dot(centroid);
 	 }
 
-	public static Face createTriangle (Vertex v0, Vertex v1, Vertex v2)
+Face.createTriangle = function (v0, v1, v2)
 	 {
 	   return createTriangle (v0, v1, v2, 0);
 	 }
@@ -170,8 +167,7 @@ class Face
 	 * @param v1 second vertex
 	 * @param v2 third vertex
 	 */
-	public static Face createTriangle (Vertex v0, Vertex v1, Vertex v2,
-					   double minArea)
+Face.createTriangle = function (v0, v1, v2, minArea)
 	 {
 	   Face face = new Face();
 	   HalfEdge he0 = new HalfEdge (v0, face);
@@ -192,7 +188,7 @@ class Face
 	   return face;
 	 }
 
-	public static Face create (Vertex[] vtxArray, int[] indices)
+Face.create = function (vtxArray, indices)
 	 {
 	   Face face = new Face();
 	   HalfEdge hePrev = null;
@@ -215,7 +211,7 @@ class Face
 	   return face;	   
 	 }
 
-	public Face ()
+function Face ()
 	 { 
 	   normal = new Vector3d();
 	   centroid = new Point3d();
@@ -228,7 +224,7 @@ class Face
 	 * @param i the half-edge index, in the range 0-2.
 	 * @return the half-edge
 	 */
-	public HalfEdge getEdge(int i)
+Face.prototype.getEdge = function(i)
 	 {
 	   HalfEdge he = he0;
 	   while (i > 0)
@@ -242,7 +238,7 @@ class Face
 	   return he;
 	 }
 
-	public HalfEdge getFirstEdge()
+Face.prototype.getFirstEdge = function()
 	 { return he0;
 	 }
 	
@@ -254,7 +250,7 @@ class Face
 	 * @param vh head point
 	 * @return the half-edge, or null if none is found.
 	 */
-	public HalfEdge findEdge (Vertex vt, Vertex vh)
+Face.prototype.findEdge = function (vt, vh)
 	 {
 	   HalfEdge he = he0;
 	   do
@@ -274,7 +270,7 @@ class Face
 	 * @param p the point
 	 * @return distance from the point to the plane
 	 */
-	public double distanceToPlane (Point3d p)
+Face.prototype.distanceToPlane = function (p)
 	 {
 	   return normal.x*p.x + normal.y*p.y + normal.z*p.z - planeOffset;
 	 }
@@ -284,22 +280,22 @@ class Face
 	 *
 	 * @return the planar normal
 	 */
-	public Vector3d getNormal ()
+Face.prototype.getNormal = function ()
 	 {
 	   return normal;
 	 }
 
-	public Point3d getCentroid ()
+Face.prototype.getCentroid = function ()
 	 {
 	   return centroid;
 	 }
 
-	public int numVertices()
+Face.prototype.numVertices = function()
 	 {
 	   return numVerts;
 	 }
 
-	public String getVertexString ()
+Face.prototype.getVertexString = function ()
 	 {
 	   String s = null;
 	   HalfEdge he = he0;
@@ -316,7 +312,7 @@ class Face
 	   return s;
 	 }
 
-	public void getVertexIndices (int[] idxs)
+Face.prototype.getVertexIndices = function (idxs)
 	 {
 	   HalfEdge he = he0;
 	   int i = 0;
@@ -327,8 +323,8 @@ class Face
 	   while (he != he0);
 	 }
 
-	private Face connectHalfEdges (
-	   HalfEdge hedgePrev, HalfEdge hedge)
+Face.prototype.connectHalfEdges = function (
+	   hedgePrev, hedge)
 	 {
 	   Face discardedFace = null;
 
@@ -373,7 +369,7 @@ class Face
 	   return discardedFace;
 	 }
 
-	void checkConsistency()
+Face.prototype.checkConsistency = function()
 	 {
 	   // do a sanity check on the face
 	   HalfEdge hedge = he0; 
@@ -433,8 +429,8 @@ class Face
 
 	 }
 
-	public int mergeAdjacentFace (HalfEdge hedgeAdj,
-				      Face[] discarded)
+Face.prototype.mergeAdjacentFace = function (hedgeAdj,
+				      discarded)
 	 {
 	   Face oppFace = hedgeAdj.oppositeFace();
 	   int numDiscarded = 0;
@@ -489,7 +485,7 @@ class Face
 	   return numDiscarded;
 	 }
 
-	private double areaSquared (HalfEdge hedge0, HalfEdge hedge1)
+Face.prototype.areaSquared = function (hedge0, hedge1)
 	 {
 	   // return the squared area of the triangle defined
 	   // by the half edge hedge0 and the point at the
@@ -514,7 +510,7 @@ class Face
 	   return x*x + y*y + z*z;	   
 	 }
 
-	public void triangulate (FaceList newFaces, double minArea)
+Face.prototype.triangulate = function (newFaces, minArea)
 	 {
 	   HalfEdge hedge;
 
@@ -557,7 +553,3 @@ class Face
 	    }
 
 	 }
-}
-
-
-
