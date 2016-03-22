@@ -45,7 +45,7 @@ Face.DELETED = 3;
 Face.prototype.computeCentroid = function (centroid)
 	 {
 	   centroid.setZero();
-	   HalfEdge he = he0;
+	   var he = he0;
 	   do
 	    { centroid.add (he.head().pnt);
 	      he = he.next;
@@ -59,15 +59,15 @@ Face.prototype.computeNormal = function (normal, minArea)
 	   computeNormal(normal);
 
 	   if (area < minArea)
-	    { 
+	    {
 	      // make the normal more robust by removing
 	      // components parallel to the longest edge
 
-	      HalfEdge hedgeMax = null;
-	      double lenSqrMax = 0;
-	      HalfEdge hedge = he0;
+	      var hedgeMax = null;
+	      var lenSqrMax = 0;
+	      var hedge = he0;
 	      do
-	       { double lenSqr = hedge.lengthSquared();
+	       { var lenSqr = hedge.lengthSquared();
 		 if (lenSqr > lenSqrMax)
 		  { hedgeMax = hedge;
 		    lenSqrMax = lenSqr;
@@ -78,40 +78,40 @@ Face.prototype.computeNormal = function (normal, minArea)
 
 	      Point3d p2 = hedgeMax.head().pnt;
 	      Point3d p1 = hedgeMax.tail().pnt;
-	      double lenMax = Math.sqrt(lenSqrMax);
-	      double ux = (p2.x - p1.x)/lenMax;
-	      double uy = (p2.y - p1.y)/lenMax;
-	      double uz = (p2.z - p1.z)/lenMax;	   
-	      double dot = normal.x*ux + normal.y*uy + normal.z*uz;
+	      var lenMax = Math.sqrt(lenSqrMax);
+	      var ux = (p2.x - p1.x)/lenMax;
+	      var uy = (p2.y - p1.y)/lenMax;
+	      var uz = (p2.z - p1.z)/lenMax;
+	      var dot = normal.x*ux + normal.y*uy + normal.z*uz;
 	      normal.x -= dot*ux;
 	      normal.y -= dot*uy;
 	      normal.z -= dot*uz;
 
-	      normal.normalize();	      
+	      normal.normalize();
 	    }
 	 }
 
 Face.prototype.computeNormal = function (normal)
 	 {
-	   HalfEdge he1 = he0.next;
-	   HalfEdge he2 = he1.next;
+	   var he1 = he0.next;
+	   var he2 = he1.next;
 
 	   Point3d p0 = he0.head().pnt;
 	   Point3d p2 = he1.head().pnt;
 
-	   double d2x = p2.x - p0.x;
-	   double d2y = p2.y - p0.y;
-	   double d2z = p2.z - p0.z;
+	   var d2x = p2.x - p0.x;
+	   var d2y = p2.y - p0.y;
+	   var d2z = p2.z - p0.z;
 
 	   normal.setZero();
 
 	   numVerts = 2;
 
 	   while (he2 != he0)
-	    { 
-	      double d1x = d2x;
-	      double d1y = d2y;
-	      double d1z = d2z;
+	    {
+	      var d1x = d2x;
+	      var d1y = d2y;
+	      var d1z = d2z;
 
 	      p2 = he2.head().pnt;
 	      d2x = p2.x - p0.x;
@@ -135,8 +135,8 @@ Face.prototype.computeNormalAndCentroid = function()
 	   computeNormal (normal);
 	   computeCentroid (centroid);
 	   planeOffset = normal.dot(centroid);
-	   int numv = 0;
-	   HalfEdge he = he0;
+	   var numv = 0;
+	   var he = he0;
 	   do
 	    { numv++;
 	      he = he.next;
@@ -169,10 +169,10 @@ Face.createTriangle = function (v0, v1, v2)
 	 */
 Face.createTriangle = function (v0, v1, v2, minArea)
 	 {
-	   Face face = new Face();
-	   HalfEdge he0 = new HalfEdge (v0, face);
-	   HalfEdge he1 = new HalfEdge (v1, face);
-	   HalfEdge he2 = new HalfEdge (v2, face);
+	   var face = new Face();
+	   var he0 = new HalfEdge (v0, face);
+	   var he1 = new HalfEdge (v1, face);
+	   var he2 = new HalfEdge (v2, face);
 
 	   he0.prev = he2;
 	   he0.next = he1;
@@ -190,16 +190,16 @@ Face.createTriangle = function (v0, v1, v2, minArea)
 
 Face.create = function (vtxArray, indices)
 	 {
-	   Face face = new Face();
-	   HalfEdge hePrev = null;
-	   for (int i=0; i<indices.length; i++)
-	    { HalfEdge he = new HalfEdge (vtxArray[indices[i]], face); 
+	   var face = new Face();
+	   var hePrev = null;
+	   for (var i=0; i<indices.length; i++)
+	    { var he = new HalfEdge (vtxArray[indices[i]], face);
 	      if (hePrev != null)
 	       { he.setPrev (hePrev);
 		 hePrev.setNext (he);
 	       }
 	      else
-	       { face.he0 = he; 
+	       { face.he0 = he;
 	       }
 	      hePrev = he;
 	    }
@@ -208,11 +208,11 @@ Face.create = function (vtxArray, indices)
 
 	   // compute the normal and offset
 	   face.computeNormalAndCentroid();
-	   return face;	   
+	   return face;
 	 }
 
 function Face ()
-	 { 
+	 {
 	   normal = new Vector3d();
 	   centroid = new Point3d();
 	   mark = VISIBLE;
@@ -226,7 +226,7 @@ function Face ()
 	 */
 Face.prototype.getEdge = function(i)
 	 {
-	   HalfEdge he = he0;
+	   var he = he0;
 	   while (i > 0)
 	    { he = he.next;
 	      i--;
@@ -241,7 +241,7 @@ Face.prototype.getEdge = function(i)
 Face.prototype.getFirstEdge = function()
 	 { return he0;
 	 }
-	
+
 	/**
 	 * Finds the half-edge within this face which has
 	 * tail <code>vt</code> and head <code>vh</code>.
@@ -252,7 +252,7 @@ Face.prototype.getFirstEdge = function()
 	 */
 Face.prototype.findEdge = function (vt, vh)
 	 {
-	   HalfEdge he = he0;
+	   var he = he0;
 	   do
 	    { if (he.head() == vh && he.tail() == vt)
 	       { return he;
@@ -297,8 +297,8 @@ Face.prototype.numVertices = function()
 
 Face.prototype.getVertexString = function ()
 	 {
-	   String s = null;
-	   HalfEdge he = he0;
+	   var s = null;
+	   var he = he0;
 	   do
 	    { if (s == null)
 	       { s = "" + he.head().index;
@@ -314,8 +314,8 @@ Face.prototype.getVertexString = function ()
 
 Face.prototype.getVertexIndices = function (idxs)
 	 {
-	   HalfEdge he = he0;
-	   int i = 0;
+	   var he = he0;
+	   var i = 0;
 	   do
 	    { idxs[i++] = he.head().index;
 	      he = he.next;
@@ -326,16 +326,16 @@ Face.prototype.getVertexIndices = function (idxs)
 Face.prototype.connectHalfEdges = function (
 	   hedgePrev, hedge)
 	 {
-	   Face discardedFace = null;
+	   var discardedFace = null;
 
 	   if (hedgePrev.oppositeFace() == hedge.oppositeFace())
 	    { // then there is a redundant edge that we can get rid off
 
-	      Face oppFace = hedge.oppositeFace();
-	      HalfEdge hedgeOpp;
+	      var oppFace = hedge.oppositeFace();
+	      var hedgeOpp;
 
 	      if (hedgePrev == he0)
-	       { he0 = hedge; 
+	       { he0 = hedge;
 	       }
 	      if (oppFace.numVertices() == 3)
 	       { // then we can get rid of the opposite face altogether
@@ -348,7 +348,7 @@ Face.prototype.connectHalfEdges = function (
 	       { hedgeOpp = hedge.getOpposite().next;
 
 		 if (oppFace.he0 == hedgeOpp.prev)
-		  { oppFace.he0 = hedgeOpp; 
+		  { oppFace.he0 = hedgeOpp;
 		  }
 		 hedgeOpp.prev = hedgeOpp.prev.prev;
 		 hedgeOpp.prev.next = hedgeOpp;
@@ -372,16 +372,16 @@ Face.prototype.connectHalfEdges = function (
 Face.prototype.checkConsistency = function()
 	 {
 	   // do a sanity check on the face
-	   HalfEdge hedge = he0; 
-	   double maxd = 0;
-	   int numv = 0;
+	   var hedge = he0;
+	   var maxd = 0;
+	   var numv = 0;
 
 	   if (numVerts < 3)
 	    { throw new InternalErrorException (
 		    "degenerate face: " + getVertexString());
 	    }
 	   do
-	    { HalfEdge hedgeOpp = hedge.getOpposite();
+	    { var hedgeOpp = hedge.getOpposite();
 	      if (hedgeOpp == null)
 	       { throw new InternalErrorException (
 		    "face " + getVertexString() + ": " +
@@ -401,7 +401,7 @@ Face.prototype.checkConsistency = function()
 		    "half edge " + hedge.getVertexString() +
 		    " reflected by " + hedgeOpp.getVertexString());
 	       }
-	      Face oppFace = hedgeOpp.face;
+	      var oppFace = hedgeOpp.face;
 	      if (oppFace == null)
 	       { throw new InternalErrorException (
 		    "face " + getVertexString() + ": " +
@@ -410,10 +410,10 @@ Face.prototype.checkConsistency = function()
 	      else if (oppFace.mark == DELETED)
 	       { throw new InternalErrorException (
 		    "face " + getVertexString() + ": " +
-		    "opposite face " + oppFace.getVertexString() + 
+		    "opposite face " + oppFace.getVertexString() +
 		    " not on hull");
 	       }
-	      double d = Math.abs(distanceToPlane(hedge.head().pnt));
+	      var d = Math.abs(distanceToPlane(hedge.head().pnt));
 	      if (d > maxd)
 	       { maxd = d;
 	       }
@@ -432,51 +432,51 @@ Face.prototype.checkConsistency = function()
 Face.prototype.mergeAdjacentFace = function (hedgeAdj,
 				      discarded)
 	 {
-	   Face oppFace = hedgeAdj.oppositeFace();
-	   int numDiscarded = 0;
+	   var oppFace = hedgeAdj.oppositeFace();
+	   var numDiscarded = 0;
 
 	   discarded[numDiscarded++] = oppFace;
 	   oppFace.mark = DELETED;
 
-	   HalfEdge hedgeOpp = hedgeAdj.getOpposite();
+	   var hedgeOpp = hedgeAdj.getOpposite();
 
-	   HalfEdge hedgeAdjPrev = hedgeAdj.prev;
-	   HalfEdge hedgeAdjNext = hedgeAdj.next;
-	   HalfEdge hedgeOppPrev = hedgeOpp.prev;
-	   HalfEdge hedgeOppNext = hedgeOpp.next;
+	   var hedgeAdjPrev = hedgeAdj.prev;
+	   var hedgeAdjNext = hedgeAdj.next;
+	   var hedgeOppPrev = hedgeOpp.prev;
+	   var hedgeOppNext = hedgeOpp.next;
 
 	   while (hedgeAdjPrev.oppositeFace() == oppFace)
 	    { hedgeAdjPrev = hedgeAdjPrev.prev;
 	      hedgeOppNext = hedgeOppNext.next;
 	    }
-	   
+
 	   while (hedgeAdjNext.oppositeFace() == oppFace)
 	    { hedgeOppPrev = hedgeOppPrev.prev;
 	      hedgeAdjNext = hedgeAdjNext.next;
 	    }
 
-	   HalfEdge hedge;
+	   var hedge;
 
 	   for (hedge=hedgeOppNext; hedge!=hedgeOppPrev.next; hedge=hedge.next)
 	    { hedge.face = this;
 	    }
 
 	   if (hedgeAdj == he0)
-	    { he0 = hedgeAdjNext; 
+	    { he0 = hedgeAdjNext;
 	    }
-	   
+
 	   // handle the half edges at the head
-	   Face discardedFace;
+	   var discardedFace;
 
 	   discardedFace = connectHalfEdges (hedgeOppPrev, hedgeAdjNext);
 	   if (discardedFace != null)
-	    { discarded[numDiscarded++] = discardedFace; 
+	    { discarded[numDiscarded++] = discardedFace;
 	    }
 
 	   // handle the half edges at the tail
 	   discardedFace = connectHalfEdges (hedgeAdjPrev, hedgeOppNext);
 	   if (discardedFace != null)
-	    { discarded[numDiscarded++] = discardedFace; 
+	    { discarded[numDiscarded++] = discardedFace;
 	    }
 
 	   computeNormalAndCentroid ();
@@ -495,45 +495,45 @@ Face.prototype.areaSquared = function (hedge0, hedge1)
 	   Point3d p1 = hedge0.head().pnt;
 	   Point3d p2 = hedge1.head().pnt;
 
-	   double dx1 = p1.x - p0.x;
-	   double dy1 = p1.y - p0.y;
-	   double dz1 = p1.z - p0.z;
+	   var dx1 = p1.x - p0.x;
+	   var dy1 = p1.y - p0.y;
+	   var dz1 = p1.z - p0.z;
 
-	   double dx2 = p2.x - p0.x;
-	   double dy2 = p2.y - p0.y;
-	   double dz2 = p2.z - p0.z;
+	   var dx2 = p2.x - p0.x;
+	   var dy2 = p2.y - p0.y;
+	   var dz2 = p2.z - p0.z;
 
-	   double x = dy1*dz2 - dz1*dy2;
-	   double y = dz1*dx2 - dx1*dz2;
-	   double z = dx1*dy2 - dy1*dx2;
+	   var x = dy1*dz2 - dz1*dy2;
+	   var y = dz1*dx2 - dx1*dz2;
+	   var z = dx1*dy2 - dy1*dx2;
 
-	   return x*x + y*y + z*z;	   
+	   return x*x + y*y + z*z;
 	 }
 
 Face.prototype.triangulate = function (newFaces, minArea)
 	 {
-	   HalfEdge hedge;
+	   var hedge;
 
 	   if (numVertices() < 4)
-	    { return; 
+	    { return;
 	    }
 
-	   Vertex v0 = he0.head();
-	   Face prevFace = null;
+	   var v0 = he0.head();
+	   var prevFace = null;
 
 	   hedge = he0.next;
-	   HalfEdge oppPrev = hedge.opposite;
-	   Face face0 = null;
+	   var oppPrev = hedge.opposite;
+	   var face0 = null;
 
-	   for (hedge=hedge.next; hedge!=he0.prev; hedge=hedge.next)	   
-	    { Face face =
+	   for (hedge=hedge.next; hedge!=he0.prev; hedge=hedge.next)
+	    { var face =
 		 createTriangle (v0, hedge.prev.head(), hedge.head(), minArea);
 	      face.he0.next.setOpposite (oppPrev);
 	      face.he0.prev.setOpposite (hedge.opposite);
 	      oppPrev = face.he0;
 	      newFaces.add (face);
 	      if (face0 == null)
-	       { face0 = face; 
+	       { face0 = face;
 	       }
 	    }
 	   hedge = new HalfEdge (he0.prev.prev.head(), this);
@@ -548,8 +548,8 @@ Face.prototype.triangulate = function (newFaces, minArea)
 	   computeNormalAndCentroid (minArea);
 	   checkConsistency();
 
-	   for (Face face=face0; face!=null; face=face.next)
-	    { face.checkConsistency(); 
+	   for (var face=face0; face!=null; face=face.next)
+	    { face.checkConsistency();
 	    }
 
 	 }

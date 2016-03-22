@@ -12,19 +12,19 @@
 	 */
 FaceList.prototype.clear = function()
 	 {
-	   head = tail = null; 
+	   head = tail = null;
 	 }
 
 	/**
 	 * Adds a vertex to the end of this list.
 	 */
 FaceList.prototype.add = function (vtx)
-	 { 
+	 {
 	   if (head == null)
 	    { head = vtx;
 	    }
 	   else
-	    { tail.next = vtx; 
+	    { tail.next = vtx;
 	    }
 	   vtx.next = null;
 	   tail = vtx;

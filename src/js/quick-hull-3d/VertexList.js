@@ -12,19 +12,19 @@
 	 */
 VertexList.prototype.clear = function()
 	 {
-	   head = tail = null; 
+	   head = tail = null;
 	 }
 
 	/**
 	 * Adds a vertex to the end of this list.
 	 */
 VertexList.prototype.add = function (vtx)
-	 { 
+	 {
 	   if (head == null)
 	    { head = vtx;
 	    }
 	   else
-	    { tail.next = vtx; 
+	    { tail.next = vtx;
 	    }
 	   vtx.prev = tail;
 	   vtx.next = null;
@@ -35,12 +35,12 @@ VertexList.prototype.add = function (vtx)
 	 * Adds a chain of vertices to the end of this list.
 	 */
 VertexList.prototype.addAll = function (vtx)
-	 { 
+	 {
 	   if (head == null)
 	    { head = vtx;
 	    }
 	   else
-	    { tail.next = vtx; 
+	    { tail.next = vtx;
 	    }
 	   vtx.prev = tail;
 	   while (vtx.next != null)
@@ -58,13 +58,13 @@ VertexList.prototype.delete = function (vtx)
 	    { head = vtx.next;
 	    }
 	   else
-	    { vtx.prev.next = vtx.next; 
+	    { vtx.prev.next = vtx.next;
 	    }
 	   if (vtx.next == null)
-	    { tail = vtx.prev; 
+	    { tail = vtx.prev;
 	    }
 	   else
-	    { vtx.next.prev = vtx.prev; 
+	    { vtx.next.prev = vtx.prev;
 	    }
 	 }
 
@@ -77,13 +77,13 @@ VertexList.prototype.delete = function (vtx1, vtx2)
 	    { head = vtx2.next;
 	    }
 	   else
-	    { vtx1.prev.next = vtx2.next; 
+	    { vtx1.prev.next = vtx2.next;
 	    }
 	   if (vtx2.next == null)
-	    { tail = vtx1.prev; 
+	    { tail = vtx1.prev;
 	    }
 	   else
-	    { vtx2.next.prev = vtx1.prev; 
+	    { vtx2.next.prev = vtx1.prev;
 	    }
 	 }
 
@@ -98,7 +98,7 @@ VertexList.prototype.insertBefore = function (vtx, next)
 	    { head = vtx;
 	    }
 	   else
-	    { next.prev.next = vtx; 
+	    { next.prev.next = vtx;
 	    }
 	   vtx.next = next;
 	   next.prev = vtx;

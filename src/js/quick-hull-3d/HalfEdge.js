@@ -53,14 +53,14 @@
 	 * @param v head vertex
 	 * @param f left-hand triangular face
 	 */
-function HalfEdge (Vertex v, Face f)
+function HalfEdge (var v, var f)
 	 {
 	   vertex = v;
 	   face = f;
 	 }
 
 function HalfEdge ()
-	 { 
+	 {
 	 }
 
 	/**
@@ -72,7 +72,7 @@ HalfEdge.prototype.setNext = function (edge)
 	 {
 	   next = edge;
 	 }
-	
+
 	/**
 	 * Gets the value of the next edge adjacent
 	 * (counter-clockwise) to this one within the triangle.
@@ -92,7 +92,7 @@ HalfEdge.prototype.setPrev = function (edge)
 	 {
 	   prev = edge;
 	 }
-	
+
 	/**
 	 * Gets the value of the previous edge adjacent (clockwise) to
 	 * this one within the triangle.
@@ -196,7 +196,7 @@ HalfEdge.prototype.length = function()
 	    { return head().pnt.distance(tail().pnt);
 	    }
 	   else
-	    { return -1; 
+	    { return -1;
 	    }
 	 }
 
@@ -211,7 +211,7 @@ HalfEdge.prototype.lengthSquared = function()
 	    { return head().pnt.distanceSquared(tail().pnt);
 	    }
 	   else
-	    { return -1; 
+	    { return -1;
 	    }
 	 }
 
