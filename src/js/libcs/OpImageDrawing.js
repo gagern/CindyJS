@@ -15,7 +15,15 @@ function imageFromValue(val) {
 evaluator.imagesize$1 = function(args, modifs) {
     var img = imageFromValue(evaluateAndVal(args[0]));
     if (img) {
-        return List.realVector([+img.width, +img.height]);
+        var w, h;
+        if (img.videoWidth !== undefined) {
+            w = img.videoWidth;
+            h = img.videoHeight;
+        } else {
+            w = img.width;
+            h = img.height;
+        }
+        return List.realVector([+w, +h]);
     }
     return nada;
 };

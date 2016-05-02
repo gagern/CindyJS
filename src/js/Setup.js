@@ -220,6 +220,10 @@ function createCindyNow() {
     //Read images: TODO ordentlich machen
     for (var k in data.images) {
         var name = data.images[k];
+        if (typeof(name) !== "string") {
+            images[k] = name; // pass in <video> elements and similar
+            continue;
+        }
         images[k] = new Image();
         images[k].ready = false;
         /*jshint -W083 */

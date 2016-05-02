@@ -20,6 +20,12 @@ var gl;
  */
 var canvaswrappers = {};
 
+/**
+ * Functions to call before rendering
+ * @type {Array.<function()>}
+ */
+var updateBeforeRendering = [];
+
 var nada;
 //var myfunctions;
 
