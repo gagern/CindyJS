@@ -78,34 +78,16 @@ drawtext((1,E.y)+(1.08,-.1),"+1");
 
 
 
-//PLOT
-
-
-hsvToRGB(h, s, v) := (
-  regional(j, p, q, t, f);
-  
-  h = (h-floor(h))*6;
-  
-  j = floor(h);
-  f = h - j;
-  
-  p = 1 - s;
-  q = 1 - s*f;
-  t = 1 - s*(1-f);
-
-  if(j == 0, [1, t, p],
-  if(j == 1, [q, 1, p],
-  if(j == 2, [p, 1, t],
-  if(j == 3, [p, q, 1],
-  if(j == 4, [t, p, 1],
-  if(j == 5, [1, p, q]))))))*v
-);
-
-
 time = t0-seconds();
 
 color(z) := ( //what color should be given to a complex number z?
-  imagergb("video", z - floor(z))
+		
+		z = if(linear, z, log(z));
+		z = z * (grid+1);
+  c = imagergb([-.2,0],[1.2,0],"video", mod(z/2/pi + .5+0.5*i, 1+1*i));
+  b = c*[1,1,1]/3;
+  sat*c + (1-sat)*[b,b,b]
+  
 );
 
 //colorplot(color(complex(#)));
@@ -211,23 +193,6 @@ var sel=function(e, b){
   cdy.evokeCS('f(z, a, b, c, d, e, A, B, C, D) := (' + b.value + '); forcerecompile();');
 }
 
-var check1=function(){
-       if(document.getElementById("ch1").checked){
-          cdy.evokeCS('grid1=true;');
-       } else {
-           cdy.evokeCS('grid1=false;');
-
-       }
-}
-
-var check2=function(){
-       if(document.getElementById("ch2").checked){
-          cdy.evokeCS('grid2=true;');
-       } else {
-           cdy.evokeCS('grid2=false;');
-
-       }
-}
 
 var check3=function(){
        if(document.getElementById("ch3").checked){
@@ -238,14 +203,6 @@ var check3=function(){
        }
 }
 
-    var check4=function(){
-       if(document.getElementById("ch4").checked){
-          cdy.evokeCS('bw=true;');
-       } else {
-           cdy.evokeCS('bw=false;');
-
-       }
-}
 </script>
 </head>
 
@@ -288,10 +245,7 @@ between $-1$ and $+1$.
 </select>
 </div>
 <div>
-  <input id="ch1" onclick="check1()" checked=true type="checkbox" >angles&nbsp;&nbsp;&nbsp;
-  <input id="ch2" onclick="check2()" checked=true type="checkbox" >radii&nbsp;&nbsp;&nbsp;
   <input id="ch3" onclick="check3()" type="checkbox" >linear diagram&nbsp;&nbsp;&nbsp;
-  <input id="ch4" onclick="check4()" type="checkbox" >black/white<br>
   </div>
 <video id="video" autoplay="autoplay"></video>
 </body>
