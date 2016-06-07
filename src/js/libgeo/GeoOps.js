@@ -6,7 +6,6 @@ geoOps._helper = {};
  * L  - Line
  * S  - Segment
  * C  - Conic (including circle)
- * T  - Text (including button)
  * *s - Set of *
  * Tr - Projective transformation
  * Mt - Moebius transformation
