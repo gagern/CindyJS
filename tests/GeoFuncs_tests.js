@@ -28,6 +28,7 @@ function dummy() { return this; }
     "stroke",
     "strokeText",
     "fillText",
+    "setTransform"
 ].forEach(function(m) {
     FakeCanvas.prototype[m] = dummy;
 });
