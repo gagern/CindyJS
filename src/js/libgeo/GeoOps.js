@@ -2418,7 +2418,7 @@ function commonButton(el, event, button) {
     img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUh" +
         "EUgAAAAEAAAPoCAQAAAC1v1zVAAAAGklEQVR42u3BMQEAAA" +
         "DCoPVPbQ0PoAAAgHcDC7gAAVI8ZnwAAAAASUVORK5CYII=";
-    outer.className = "CindyJS-baseline";
+    outer.className = "CindyJS-baseline CindyJS-button";
     outer.appendChild(img);
     var inlinebox = document.createElement("div");
     inlinebox.className = "CindyJS-button";

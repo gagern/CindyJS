@@ -214,7 +214,7 @@ function drawgeotext(el) {
             outer.style.left = x + "px";
             outer.style.top = y + "px";
             if (align || inlinebox.style.transform)
-                inlinebox.style.transform =
+                label.style.transform =
                 "translateX(" + (-100 * align) + "%)";
             el._textCache = {
                 text: text,
