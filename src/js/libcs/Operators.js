@@ -4613,7 +4613,10 @@ evaluator.createtool$3 = function(args, modifs) {
             }
             var button = document.createElement("button");
             var img = document.createElement("img");
-            img.src = CindyJS.getBaseDir() + "images/" + name + ".png";
+            var icn = tools[name].icon || name;
+            if (icn.indexOf(".") === -1) // may specify a full file name
+                icn = "Icons.svg#" + icn; // or just a fragment identifier
+            img.src = CindyJS.getBaseDir() + "images/" + icn;
             button.appendChild(img);
 
             function click() {

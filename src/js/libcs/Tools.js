@@ -442,6 +442,7 @@ tools.Mid.actions[2].do = function() {
 
 // Circle
 tools.Circle = {};
+tools.Circle.icon = "CircleMP";
 tools.Circle.actions = [];
 tools.Circle.actions[0] = {};
 tools.Circle.actions[0].event = "mousedown";
