@@ -562,7 +562,7 @@ List.normalizeAbs = function(a) {
 List.max = function(a1, a2) {
 
     if (a1.value.length !== a2.value.length) {
-        return nada;
+        return nada; // Not a list, consistent with Cinderella
     }
     var erg = [];
     for (var i = 0; i < a1.value.length; i++) {
@@ -580,7 +580,7 @@ List.max = function(a1, a2) {
 List.min = function(a1, a2) {
 
     if (a1.value.length !== a2.value.length) {
-        return nada;
+        return nada; // Not a list, consistent with Cinderella
     }
     var erg = [];
     for (var i = 0; i < a1.value.length; i++) {
@@ -596,18 +596,20 @@ List.min = function(a1, a2) {
 
 
 List.scaldiv = function(a1, a2) {
-    if (a1.ctype !== 'number') {
+    if (a1.ctype !== 'number') { // TODO: move this check to the caller
         return nada;
     }
+    // TODO: consider using scalmult with inverse to speed things up
     var erg = [];
     for (var i = 0; i < a2.value.length; i++) {
         var av2 = a2.value[i];
+        // TODO: handle ctype === 'geo'
         if (av2.ctype === 'number') {
             erg[i] = General.div(av2, a1);
         } else if (av2.ctype === 'list') {
             erg[i] = List.scaldiv(a1, av2);
         } else {
-            erg[i] = nada;
+            erg[i] = av2; // Keep non-numbers like Cinderella
         }
     }
     return {
@@ -618,18 +620,19 @@ List.scaldiv = function(a1, a2) {
 
 
 List.scalmult = function(a1, a2) {
-    if (a1.ctype !== 'number') {
+    if (a1.ctype !== 'number') { // TODO: move this check to the caller
         return nada;
     }
     var erg = [];
     for (var i = 0; i < a2.value.length; i++) {
         var av2 = a2.value[i];
+        // TODO: handle ctype === 'geo'
         if (av2.ctype === 'number') {
             erg[i] = General.mult(av2, a1);
         } else if (av2.ctype === 'list') {
             erg[i] = List.scalmult(a1, av2);
         } else {
-            erg[i] = nada;
+            erg[i] = av2; // Keep non-numbers like Cinderella
         }
     }
     return {
@@ -642,7 +645,7 @@ List.scalmult = function(a1, a2) {
 List.add = function(a1, a2) {
 
     if (a1.value.length !== a2.value.length) {
-        return nada;
+        return nada; // Not a list, consistent with Cinderella
     }
     var erg = [];
     for (var i = 0; i < a1.value.length; i++) {
@@ -653,7 +656,7 @@ List.add = function(a1, a2) {
         } else if (av1.ctype === 'list' && av2.ctype === 'list') {
             erg[i] = List.add(av1, av2);
         } else {
-            erg[i] = nada;
+            erg[i] = nada; // consistent with Cinderella
         }
     }
     return {
@@ -666,7 +669,7 @@ List.add = function(a1, a2) {
 List.sub = function(a1, a2) {
 
     if (a1.value.length !== a2.value.length) {
-        return nada;
+        return nada; // Not a list, consistent with Cinderella
     }
     var erg = [];
     for (var i = 0; i < a1.value.length; i++) {
@@ -677,7 +680,7 @@ List.sub = function(a1, a2) {
         } else if (av1.ctype === 'list' && av2.ctype === 'list') {
             erg[i] = List.sub(av1, av2);
         } else {
-            erg[i] = nada;
+            erg[i] = nada; // consistent with Cinderella
         }
     }
     return {
@@ -696,9 +699,8 @@ List.abs2 = function(a1) {
             erg += CSNumber.abs2(av1).value.real;
         } else if (av1.ctype === 'list') {
             erg += List.abs2(av1).value.real;
-        } else {
-            return nada;
         }
+        // Other values are ignored, just as in Cinderella
     }
 
     return {
@@ -710,36 +712,22 @@ List.abs2 = function(a1) {
     };
 };
 
+
 List.abs = function(a1) {
     return CSNumber.sqrt(List.abs2(a1));
-};
-
-
-List.normalizeMaxXX = function(a) { //Assumes that list is a number Vector
-    var maxv = -10000;
-    var nn = CSNumber.real(1);
-    for (var i = 0; i < a.value.length; i++) {
-        var v = CSNumber.abs(a.value[i]);
-        if (v.value.real > maxv) {
-            nn = a.value[i];
-            maxv = v.value.real;
-        }
-    }
-    return List.scaldiv(nn, a);
-
 };
 
 
 List.recursive = function(a1, op) {
     var erg = [];
     for (var i = 0; i < a1.value.length; i++) {
-        var av1 = evaluateAndVal(a1.value[i]); //Will man hier evaluieren
+        var av1 = evaluateAndVal(a1.value[i]); // Do we want to evaluate this?
         if (av1.ctype === 'number') {
             erg[i] = CSNumber[op](av1);
         } else if (av1.ctype === 'list') {
             erg[i] = List[op](av1);
         } else {
-            erg[i] = nada;
+            erg[i] = av1; // Keep non-numbers like Cinderella conjugate does
         }
     }
     return {
@@ -896,7 +884,7 @@ List.isNumberMatrix = function(a) {
 
 
 List.scalproduct = function(a1, a2) {
-    if (a1.value.length !== a2.value.length) {
+    if (a1.value.length !== a2.value.length) { // TODO: move this check to the caller
         return nada;
     }
     var erg = {
@@ -920,7 +908,7 @@ List.scalproduct = function(a1, a2) {
 };
 
 List.sesquilinearproduct = function(a1, a2) {
-    if (a1.value.length !== a2.value.length) {
+    if (a1.value.length !== a2.value.length) { // TODO: move this check to the caller
         return nada;
     }
     var real = 0;
