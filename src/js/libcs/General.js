@@ -243,3 +243,7 @@ General.withUsage = function(v, usage) {
         "usage": usage
     };
 };
+
+General.identity = function(x) {
+    return x;
+};
