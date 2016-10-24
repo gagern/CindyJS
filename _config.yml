@@ -13,17 +13,16 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-
-title: ‹Name›'s CindyJS Blog
-subtitle: ‹Name›'s Blog
-email: ‹Email›
+title: Martin's CindyJS Blog
+subtitle: Martin's Blog
+email: gagern@ma.tum.de
 description: > # this means to ignore newlines until "baseurl:"
-  Mathematical content and examples by ‹Full Name› using CindyJS.
+  Mathematical content and examples by Martin von Gagern using CindyJS.
 baseurl: "/CindyJS" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site
-github_username: ‹name›
+github_username: gagern
 gh:
-  repo:   ‹name›/CindyJS
+  repo:   gagern/CindyJS
   branch: gh-pages
 license:
   name: CC-BY-SA 4.0 License
