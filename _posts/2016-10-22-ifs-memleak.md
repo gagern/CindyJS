@@ -16,8 +16,13 @@ or a shared `ArrayBuffer` otherwise (Safari in particular).
 However, I observe **massive** memory usage for this in Firefox.
 Within minutes it has my system swapping heavily,
 and shortly after the process gets killed for resource exhaustion.
+The problem is tracked in [Mozilla bug #1312148][moz1312148].
 This post here is meant to preserve that state, to help debugging.
 I may update it to provide a link to an improved version.
+
+[moz1312148]: https://bugzilla.mozilla.org/show_bug.cgi?id=1312148
+
+<button onclick="this.style.display='none';cdy.startup()">Start Widget</button>
 
 <div id="CSCanvas"></div>
 <script type="text/javascript">
@@ -31,6 +36,7 @@ var cdy = CindyJS({
     textsize: 12.0
   },
   angleUnit: "°",
+  autostart: false,
   geometry: [
     {name: "A", type: "Free", pos: [-1.7142857142857142, -4.0, -0.5714285714285714], color: [1.0, 1.0, 1.0], pinned: true, size: 3.0},
     {name: "B", type: "Free", pos: [4.0, 2.6666666666666665, 1.3333333333333333], color: [1.0, 1.0, 1.0], alpha: 0.0, pinned: true, size: 3.0},
