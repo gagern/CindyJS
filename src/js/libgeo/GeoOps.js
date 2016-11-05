@@ -473,6 +473,9 @@ geoOps.PointOnLine.getParamFromState = function(el) {
 geoOps.PointOnLine.putParamToState = function(el, param) {
     return putStateComplexVector(param);
 };
+geoOps.PointOnLine.tangent = function(el) {
+    return csgeo.csnames[(el.args[0])].homog;
+};
 geoOps.PointOnLine.stateSize = 12;
 
 
@@ -584,6 +587,10 @@ geoOps.PointOnCircle.updatePosition = function(el) {
     el.homog = General.withUsage(pos, "Point");
     el.antipodalPoint = candidates.value[1];
 };
+geoOps.PointOnCircle.tangent = function(el) {
+    var circle = csgeo.csnames[el.args[0]];
+    return List.productMV(circle.matrix, el.homog);
+};
 geoOps.PointOnCircle.stateSize = 6 + tracing2.stateSize;
 
 geoOps.OtherPointOnCircle = {};
@@ -638,6 +645,7 @@ geoOps.PointOnSegment.updatePosition = function(el) {
     homog = List.normalizeMax(homog);
     el.homog = General.withUsage(homog, "Point");
 };
+geoOps.PointOnSegment.tangent = geoOps.PointOnLine.tangent;
 geoOps.PointOnSegment.stateSize = 2;
 
 

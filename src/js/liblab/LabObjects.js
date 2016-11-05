@@ -98,23 +98,6 @@ labObjects.Mass = {
         beh.fx = 0;
         beh.fy = 0;
         beh.fz = 0;
-
-        /* TODO Implement this
-            if (type === TYPE_POINTONCIRCLE) {
-                Vec mid = ((PointOnCircle) associatedPoint.algorithm).getCenter();
-                midx = mid.xr / mid.zr;
-                midy = mid.yr / mid.zr;
-                
-            }
-        if (type === TYPE_POINTONLINE) {
-            Vec line = ((PointOnLine) associatedPoint.algorithm).getLine().coord;
-            lx = line.yr;
-            ly = -line.xr;
-            double n = Math.sqrt(lx * lx + ly * ly);
-            lx /= n; //Das ist die normierte Geradenrichtung
-            ly /= n;
-        } 
-        */
     },
 
     setVelocity: function(beh, vx, vy, vz) {
@@ -281,39 +264,25 @@ labObjects.Mass = {
     },
 
     calculateDelta: function(beh, i) {
-
-        //  if (type === TYPE_FREE) {
-        if (true) {
-            beh.dx[i] = beh.vx; //x'=v
-            beh.dy[i] = beh.vy;
-            beh.dz[i] = beh.vz;
+        beh.dx[i] = beh.vx; //x'=v
+        beh.dy[i] = beh.vy;
+        beh.dz[i] = beh.vz;
+        var pt = csgeo.csnames[beh.geo[0]];
+        var tfn = geoOps[pt.type].tangent;
+        if (!tfn) { // free mass
             beh.dvx[i] = beh.fx / beh.mass; //v'=F/m
             beh.dvy[i] = beh.fy / beh.mass;
             beh.dvz[i] = beh.fz / beh.mass;
+        } else { // semi-free mass, project forces to tangent direction
+            var tangent = tfn(pt);
+            var dir = List.normalizeAbs(List.cross(List.linfty, tangent));
+            var tx = dir.value[0].value.real;
+            var ty = dir.value[1].value.real;
+            var a = (beh.fx * tx + beh.fy * ty) / beh.mass;
+            beh.dvx[i] = tx * a;
+            beh.dvy[i] = ty * a;
+            beh.dvz[i] = 0;
         }
-        /* TODO Implement
-        if (type === TYPE_POINTONCIRCLE) {
-            double dix = y - midy;  //Steht senkrecht auf Radius
-            double diy = -x + midx;
-            double n = Math.sqrt(dix * dix + diy * diy);
-            dix /= n;
-            diy /= n;
-            double scal = dix * fx + diy * fy;//Es wird nur die wirsame kraftmomponente berücksichtigt
-                dx[i] = vx;             //x'=v
-                dy[i] = vy;
-                dvx[i] = dix * scal / mass;       //v'=F/m
-                dvy[i] = diy * scal / mass;
-        }
-        if (type === TYPE_POINTONLINE) {
-            double scal = lx * fx + ly * fy;//Es wird nur die wirsame kraftmomponente berücksichtigt
-            dx[i] = vx;             //x'=v
-            dy[i] = vy;
-            dvx[i] = lx * scal / mass;       //v'=F/m
-            dvy[i] = ly * scal / mass;
-        }
-        */
-
-
     },
 
     savePos: function(beh, i) {
