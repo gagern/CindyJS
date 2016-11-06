@@ -144,17 +144,29 @@ labObjects.Mass = {
 
 
     move: function(beh) {
-        // if (type === TYPE_FREE) {
-        if (true) {
-            beh.pos = [beh.x, beh.y, 1.0];
-            beh.internalmove = true;
-            if (!move || !mouse.down || beh.el !== move.mover)
-                movepointscr(beh.el, List.realVector(beh.pos), "homog");
-            (beh.el).sx = beh.x;
-            (beh.el).sy = beh.y;
-
-            beh.internalmove = false;
+        var tfn = geoOps[beh.el.type].tangent;
+        if (tfn) {
+            var tangent = tfn(beh.el);
+            var dir = List.normalizeAbs(List.cross(List.linfty, tangent));
+            var tx = dir.value[0].value.real;
+            var ty = dir.value[1].value.real;
+            var vx = beh.vx;
+            var vy = beh.vy;
+            var v = Math.sqrt(vx * vx + vy * vy);
+            if (tx * vx + ty * vy < 0)
+                v = -v;
+            beh.vx = tx * v;
+            beh.vy = ty * v;
         }
+
+        beh.pos = [beh.x, beh.y, 1.0];
+        beh.internalmove = true;
+        if (!move || !mouse.down || beh.el !== move.mover)
+            movepointscr(beh.el, List.realVector(beh.pos), "homog");
+        beh.el.sx = beh.x;
+        beh.el.sy = beh.y;
+
+        beh.internalmove = false;
 
 
         /*
@@ -177,46 +189,6 @@ labObjects.Mass = {
              vy = (y - voldy4) / 2.0;
              return;
          }
-         if (type === TYPE_FREE) {
-             pos.assign(x, y, 1.0);
-             internalmove = true;
-             kernel.construction.simulateMoveUnlessFixedByMouse(associatedPoint, pos);
-             internalmove = false;
-         }
-         if (type === TYPE_POINTONCIRCLE) {
-             double dix = y - midy;  //Steht senkrecht auf radius
-             double diy = -x + midx;
-             double n = Math.sqrt(dix * dix + diy * diy);
-             dix /= n;
-             diy /= n;
-             n = Math.sqrt(vx * vx + vy * vy);
-             dix *= n;
-             diy *= n;
-             double scal = dix * vx + diy * vy;
-             if (scal < 0) {
-                 vx = -dix;
-                 vy = -diy;
-             } else {
-                 vx = dix;
-                 vy = diy;
-             }
-             pos.assign(x, y, 1.0);
-             internalmove = true;
-             kernel.construction.simulateMoveUnlessFixedByMouse(associatedPoint, pos);
-             internalmove = false;
-         }
-         if (type === TYPE_POINTONLINE) {
-             
-             double scal = lx * vx + ly * vy;
-             vx = scal * lx;
-             vy = scal * ly;
-             
-             pos.assign(x, y, 1.0);
-             internalmove = true;
-             kernel.construction.simulateMoveUnlessFixedByMouse(associatedPoint, pos);
-             internalmove = false;
-         }
-         
          */
     },
 
@@ -267,14 +239,13 @@ labObjects.Mass = {
         beh.dx[i] = beh.vx; //x'=v
         beh.dy[i] = beh.vy;
         beh.dz[i] = beh.vz;
-        var pt = csgeo.csnames[beh.geo[0]];
-        var tfn = geoOps[pt.type].tangent;
+        var tfn = geoOps[beh.el.type].tangent;
         if (!tfn) { // free mass
             beh.dvx[i] = beh.fx / beh.mass; //v'=F/m
             beh.dvy[i] = beh.fy / beh.mass;
             beh.dvz[i] = beh.fz / beh.mass;
         } else { // semi-free mass, project forces to tangent direction
-            var tangent = tfn(pt);
+            var tangent = tfn(beh.el);
             var dir = List.normalizeAbs(List.cross(List.linfty, tangent));
             var tx = dir.value[0].value.real;
             var ty = dir.value[1].value.real;
