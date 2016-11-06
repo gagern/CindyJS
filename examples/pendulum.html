@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    
+    <title>pendulum.cdy</title>
+    <style type="text/css">
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        #CSConsole {
+            background-color: #FAFAFA;
+            border-top: 1px solid #333333;
+            bottom: 0px;
+            height: 200px;
+            overflow-y: scroll;
+            position: fixed;
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="../build/js/CindyJS.css">
+    <script type="text/javascript" src="../build/js/Cindy.js"></script>
+    <script type="text/javascript">
+var cdy = CindyJS({
+  scripts: "cs*",
+  defaultAppearance: {
+    dimDependent: 0.7,
+    fontFamily: "sans-serif",
+    lineSize: 1,
+    pointSize: 5.0,
+    textsize: 12.0
+  },
+  angleUnit: "°",
+  geometry: [
+    {name: "A", type: "Free", pos: [4.0, 4.0, 1.3333333333333333], color: [1.0, 0.0, 0.0], labeled: true},
+    {name: "C0", type: "CircleByRadius", pos: {xx: -0.05555555555555555, yy: -0.05555555555555555, zz: 1.0, xy: 0.0, xz: 0.3333333333333333, yz: -0.3333333333333333}, color: [0.0, 0.0, 1.0], radius: 6.0, args: ["A"], printname: "$C_{0}$"},
+    {name: "B", type: "PointOnCircle", pos: [4.0, {r: -1.1456708416342887, i: 1.287906307738981E-16}, {r: 0.614287626205397, i: -1.9617324721139747E-17}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true},
+    {name: "", type: "OtherPointOnCircle", pos: [{r: 0.2601932889064309, i: -1.1072409759667882E-16}, -4.0, {r: -0.5085797562961347, i: 9.705858983675853E-18}], color: [1.0, 1.0, 1.0], args: ["B"], pinned: true, size: 0.0}
+  ],
+  behavior: [
+    {type: "Environment", gravity: 0.490272373540856},
+    {geo: ["B"], type: "Mass"}
+  ],
+  animation: {
+    autoplay: false,
+    controls: true,
+    speed: 0.5,
+    speedRange: [0.0, 1.0],
+    accuracy: 1
+  },
+  autoplay: false,
+  animcontrols: true,
+  ports: [{
+    id: "CSCanvas",
+    width: 680,
+    height: 322,
+    transform: [{visibleRect: [-9.06, 9.34, 18.14, -3.54]}],
+    grid: 1.0,
+    snap: true,
+    background: "rgb(168,176,192)"
+  }],
+  csconsole: false,
+  cinderella: {build: 1897, version: [2, 9, 1897]}
+});
+    </script>
+</head>
+<body>
+    <div id="CSCanvas"></div>
+</body>
+</html>
