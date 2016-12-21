@@ -695,30 +695,17 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
         var uz = x1 * y2 - y1 * x2;
         // c is the proposed control point, computed as pole of u
         var cz = k10 * ux + k01 * uy + k00 * uz;
-        if (Math.abs(cz) < eps)
+        if (Math.abs(cz) < CSNumber.eps)
             return csctx.lineTo(x2, y2);
         var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
         var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
-        if (!(isFinite(cx) && isFinite(cy))) // probably already linear
-            return csctx.lineTo(x2, y2);
-        var area = Math.abs(
-            x1 * cy + cx * y2 + x2 * y1 -
-                x2 * cy - cx * y1 - x1 * y2);
-        if (area < maxError) // looks linear, too
-            return csctx.lineTo(x2, y2);
+		// m is the midpoint of x1 and x2
         var mx = 0.5 * (x1 + x2);
         var my = 0.5 * (y1 + y2);
-        var dx = cx - mx;
-        var dy = cy - my;
-        var sm = Math.sqrt(
-            (c20 * mx + c11 * my + c10) * mx + (c02 * my + c01) * my + c00);
-        var sc = Math.sqrt(-(
-            (c20 * cx + c11 * cy + c10) * cx + (c02 * cy + c01) * cy + c00));
-        var k = sm / (sm + sc);
-        if (k < 0) k = 0;
-        /*jshint -W018 */
-        if (!(k <= 1)) k = 1; // also for the NaN case, likely pair of lines
-        /*jshint +W018 */
+        var c = (c20 * cx + c11 * cy + c10) * cx + (c02 * cy + c01) * cy + c00;
+        var m = (c20 * mx + c11 * my + c10) * mx + (c02 * my + c01) * my + c00;
+        var k = 1 / (1 + Math.sqrt(-c / m));
+        if (isNaN(k)) k = 1;
         refine(x1, y1, cx, cy, x2, y2, k, 0);
     }
 
@@ -741,82 +728,6 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
             refine(Ax, Ay, kBx + j * Ax, kBy + j * Ay, Gx, Gy, kr, n);
             refine(Gx, Gy, kBx + j * Cx, kBy + j * Cy, Cx, Cy, kr, n);
         }
-    }
-
-    // Find the control points of a quadratic Bézier which at the
-    // endpoints agrees with the conic in position and tangent direction.
-    function refineOld(x1, y1, x2, y2, depth) {
-        // u is the line joining pt1 and pt2
-        var ux = y1 - y2;
-        var uy = x2 - x1;
-        var uz = x1 * y2 - y1 * x2;
-        // c is the proposed control point, computed as pole of u
-        var cz = k10 * ux + k01 * uy + k00 * uz;
-        if (Math.abs(cz) < eps)
-            return csctx.lineTo(x2, y2);
-        var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
-        var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
-        if (!(isFinite(cx) && isFinite(cy))) // probably already linear
-            return csctx.lineTo(x2, y2);
-        var area = Math.abs(
-            x1 * cy + cx * y2 + x2 * y1 -
-                x2 * cy - cx * y1 - x1 * y2);
-        if (area < maxError) // looks linear, too
-            return csctx.lineTo(x2, y2);
-        do { // so break defaults to single curve and return skips that
-            if (depth > 10)
-                break;
-            // Compute pt3 as the intersection of the segment h-c and the conic
-            var hx = 0.5 * (x1 + x2);
-            var hy = 0.5 * (y1 + y2);
-            var dx = cx - hx;
-            var dy = cy - hy;
-            if (dx * dx + dy * dy < maxError)
-                break;
-            // using d=(dx,dy,0) and h=(hx,hy,1) compute bilinear forms
-            var dMd = c20 * dx * dx + c11 * dx * dy + c02 * dy * dy;
-            var dMh = 2 * c20 * dx * hx + c11 * (dx * hy + dy * hx) +
-                2 * c02 * dy * hy + c10 * dx + c01 * dy;
-            var hMh = (c20 * hx + c11 * hy + c10) * hx +
-                (c02 * hy + c01) * hy + c00;
-            var sol = solveRealQuadratic(dMd, dMh, hMh);
-            if (!sol) {
-                // discriminant is probably slightly negative due to error.
-                // The following values SHOULD be pretty much identical now.
-                sol = [-0.5 * dMh / dMd, -2 * hMh / dMh];
-            }
-            // Now we have to points, h + sol[i] * d, and have to pick one.
-            if (sol[0] > sol[1])
-                sol = [sol[1], sol[0]];
-            var between = 0.5 * (sol[0] + sol[1]);
-            var signBetween = sign(hx + between * dx, hy + between * dy);
-            var signH = sign(hx, hy);
-            if (signBetween * signH === -1) {
-                // h is outside the pair of roots, so both of these
-                // should be positive and we pick the one which is closer
-                sol = sol[0];
-            } else if (signBetween * signH === 1) {
-                // h is between, so one root should be negative and
-                // one positiv, and we pick the positive as it's the
-                // one in the right direction
-                sol = sol[1];
-            } else { // signs messed up, got a NaN somewhere in there
-                break;
-            }
-            var x3 = hx + sol * dx;
-            var y3 = hy + sol * dy;
-            // The point m = (c+h)/2 lies on the Bézier curve
-            var mx = 0.5 * (cx + hx);
-            var my = 0.5 * (cy + hy);
-            var ex = x3 - mx;
-            var ey = y3 - my;
-            if (ex * ex + ey * ey < maxError)
-                break;
-            refine(x1, y1, x3, y3, depth + 1);
-            refine(x3, y3, x2, y2, depth + 1);
-            return;
-        } while (false);
-        csctx.quadraticCurveTo(cx, cy, x2, y2);
     }
 
 }; // end eval_helper.drawconic
