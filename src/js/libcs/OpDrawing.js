@@ -699,7 +699,7 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
             return csctx.lineTo(x2, y2);
         var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
         var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
-		// m is the midpoint of x1 and x2
+        // m is the midpoint of x1 and x2
         var mx = 0.5 * (x1 + x2);
         var my = 0.5 * (y1 + y2);
         var c = (c20 * cx + c11 * cy + c10) * cx + (c02 * cy + c01) * cy + c00;
