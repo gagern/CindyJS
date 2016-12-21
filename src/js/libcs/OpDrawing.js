@@ -442,7 +442,7 @@ DbgCtx.prototype = {
 };
 
 eval_helper.drawconic = function(conicMatrix, modifs) {
-    //var csctx = new DbgCtx();
+    var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
         return;
@@ -684,12 +684,68 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
     csctx.stroke();
 
     function drawArc(pt1, pt2) {
-        refine(pt1.x, pt1.y, pt2.x, pt2.y, 0);
+        var x1 = pt1.x;
+        var y1 = pt1.y;
+        var x2 = pt2.x;
+        var y2 = pt2.y;
+
+        // u is the line joining pt1 and pt2
+        var ux = y1 - y2;
+        var uy = x2 - x1;
+        var uz = x1 * y2 - y1 * x2;
+        // c is the proposed control point, computed as pole of u
+        var cz = k10 * ux + k01 * uy + k00 * uz;
+        if (Math.abs(cz) < eps)
+            return csctx.lineTo(x2, y2);
+        var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
+        var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
+        if (!(isFinite(cx) && isFinite(cy))) // probably already linear
+            return csctx.lineTo(x2, y2);
+        var area = Math.abs(
+            x1 * cy + cx * y2 + x2 * y1 -
+                x2 * cy - cx * y1 - x1 * y2);
+        if (area < maxError) // looks linear, too
+            return csctx.lineTo(x2, y2);
+        var mx = 0.5 * (x1 + x2);
+        var my = 0.5 * (y1 + y2);
+        var dx = cx - mx;
+        var dy = cy - my;
+        var sm = Math.sqrt(
+            (c20 * mx + c11 * my + c10) * mx + (c02 * my + c01) * my + c00);
+        var sc = Math.sqrt(-(
+            (c20 * cx + c11 * cy + c10) * cx + (c02 * cy + c01) * cy + c00));
+        var k = sm / (sm + sc);
+        if (k < 0) k = 0;
+        /*jshint -W018 */
+        if (!(k <= 1)) k = 1; // also for the NaN case, likely pair of lines
+        /*jshint +W018 */
+        refine(x1, y1, cx, cy, x2, y2, k, 0);
+    }
+
+    function refine(Ax, Ay, Bx, By, Cx, Cy, k, n) {
+        var j = 1 - k;
+        var Mx = 0.5 * (Ax + Cx);
+        var My = 0.5 * (Ay + Cy);
+        var Fx = 0.5 * (Bx + Mx);
+        var Fy = 0.5 * (By + My);
+        var kBx = k * Bx;
+        var kBy = k * By;
+        var Gx = kBx + j * Mx;
+        var Gy = kBy + j * My;
+        if ((Fx - Gx) * (Fx - Gx) + (Fy - Gy) * (Fy - Gy) < maxError ||
+            n > 10) {
+            csctx.quadraticCurveTo(Bx, By, Cx, Cy);
+        } else {
+            var kr = 1 / (Math.sqrt(2 * j) + 1);
+            ++n;
+            refine(Ax, Ay, kBx + j * Ax, kBy + j * Ay, Gx, Gy, kr, n);
+            refine(Gx, Gy, kBx + j * Cx, kBy + j * Cy, Cx, Cy, kr, n);
+        }
     }
 
     // Find the control points of a quadratic Bézier which at the
     // endpoints agrees with the conic in position and tangent direction.
-    function refine(x1, y1, x2, y2, depth) {
+    function refineOld(x1, y1, x2, y2, depth) {
         // u is the line joining pt1 and pt2
         var ux = y1 - y2;
         var uy = x2 - x1;
