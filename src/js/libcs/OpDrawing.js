@@ -405,7 +405,7 @@ DbgCtx.prototype = {
         this.delegate.lineTo(x, y);
     },
     quadraticCurveTo: function(x1, y1, x, y) {
-        console.log("quadratocCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
+        console.log("quadraticCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
         this.ctls.push([x1, y1]);
         this.pts.push([x, y]);
         this.delegate.quadraticCurveTo(x1, y1, x, y);
@@ -706,7 +706,18 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
         var m = (c20 * mx + c11 * my + c10) * mx + (c02 * my + c01) * my + c00;
         var k = 1 / (1 + Math.sqrt(-c / m));
         if (isNaN(k)) k = 1;
-        refine(x1, y1, cx, cy, x2, y2, k, 0);
+        var j = 1 - k;
+        var dx = cx - mx;
+        var dy = cy - my;
+        var s = dx * dx + dy * dy;
+        if (s < maxError) {
+            csctx.lineTo(x2, y2);
+        } else if (s * j * j < maxError) {
+            csctx.lineTo(cx, cy);
+            csctx.lineTo(x2, y2);
+        } else {
+            refine(x1, y1, cx, cy, x2, y2, k, 0);
+        }
     }
 
     function refine(Ax, Ay, Bx, By, Cx, Cy, k, n) {
@@ -719,8 +730,9 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
         var kBy = k * By;
         var Gx = kBx + j * Mx;
         var Gy = kBy + j * My;
-        if ((Fx - Gx) * (Fx - Gx) + (Fy - Gy) * (Fy - Gy) < maxError ||
-            n > 10) {
+        var dx = Fx - Gx;
+        var dy = Fy - Gy;
+        if (dx * dx + dy * dy < maxError || n > 10) {
             csctx.quadraticCurveTo(Bx, By, Cx, Cy);
         } else {
             var kr = 1 / (Math.sqrt(2 * j) + 1);
