@@ -710,7 +710,7 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
         var dx = cx - mx;
         var dy = cy - my;
         var s = dx * dx + dy * dy;
-        if (s < maxError) {
+        if (s * k * k < maxError) {
             csctx.lineTo(x2, y2);
         } else if (s * j * j < maxError) {
             csctx.lineTo(cx, cy);
