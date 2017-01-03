@@ -481,7 +481,6 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     Render2D.preDrawCurve();
 
     var maxError = 0.04; // squared distance in px^2
-    var sol, x, y, i;
 
     // Transform matrix of conic to match canvas coordinate system
     var mat = List.normalizeMax(conicMatrix);
@@ -551,8 +550,9 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
 
     function doBoundary(sol, other, vert, sort, extent) {
         // Edge cannot be inside if there are no solutions.
+        var t;
         if (sol !== null) {
-            var coord, pt, t;
+            var coord, pt;
             var extent0 = sort > 0 ? 0 : extent;
             var extent1 = sort > 0 ? extent : 0;
             // Only include each first corner that falls within the conic
@@ -606,11 +606,6 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
             doBoundary(xTop, 0, false, -1, csw)))
         return;
 
-    if (csctx.special) { // begin DEBUG code
-        for (i = 0; i < points.length; ++i)
-            csctx.special.push([points[i].x, points[i].y]);
-    } // end DEBUG code
-
     csctx.beginPath();
     var next;
     var n = points.length;
@@ -620,14 +615,14 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     var previousBegin = null;
     do {
         next = points[i];
-        if (next.t == "begin") {
+        if (next.t === "begin") {
             previousBegin = next;
             break;
         }
     } while (--i > 0);
     if (!(k00 < 0 && previous.t === "end")) csctx.moveTo(previous.x, previous.y);
     for (i = 0; i < n; ++i) {
-        var next = points[i];
+        next = points[i];
         switch (next.t) {
             case "begin":
                 previousBegin = next;
@@ -643,12 +638,17 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
                 if (k00 < 0) drawArc(next, previousBegin);
                 break;
             case "split":
-            default:
                 drawArc(previous, next);
                 break;
         }
         previous = next;
     }
+	
+    if (csctx.special) { // begin DEBUG code
+        for (i = 0; i < points.length; ++i)
+            csctx.special.push([points[i].x, points[i].y]);
+    } // end DEBUG code
+
     if (df === "D") {
         csctx.stroke();
     }
