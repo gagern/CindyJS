@@ -643,7 +643,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
         }
         previous = next;
     }
-	
+
     if (csctx.special) { // begin DEBUG code
         for (i = 0; i < points.length; ++i)
             csctx.special.push([points[i].x, points[i].y]);
