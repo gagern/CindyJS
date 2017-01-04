@@ -623,7 +623,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
                 if (j >= 0) {
                     // When second "begin" is found, rotate the points
                     // if needed so that the first "begin" is at start
-                    if (j != 0) {
+                    if (j !== 0) {
                         points = points.slice(j).concat(points.slice(0, j));
                     }
                     previousBegin = points[0];
