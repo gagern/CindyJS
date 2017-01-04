@@ -780,6 +780,326 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
 
 }; // end eval_helper.drawconic
 
+eval_helper.drawconic2 = function(conicMatrix, modifs) {
+    //var csctx = new DbgCtx();
+    Render2D.handleModifs(modifs, Render2D.conicModifs);
+    if (Render2D.lsize === 0)
+        return;
+    Render2D.preDrawCurve();
+
+    var maxError = 0.04; // squared distance in px^2
+    var eps = 1e-14;
+    var sol, x, y, i;
+
+    // Transform matrix of conic to match canvas coordinate system
+    var mat = List.normalizeMax(conicMatrix);
+    if (!List._helper.isAlmostReal(mat))
+        return;
+    var tmat = csport.toMat();
+    mat = List.mult(List.transpose(tmat), mat);
+    mat = List.mult(mat, tmat);
+    mat = List.normalizeMax(mat);
+
+    // Using polynomial coefficients instead of matrix
+    // since it generalizes to higher degrees more easily.
+    // cij is the coefficient of the monomial x^i * y^j.
+    var c20 = mat.value[0].value[0].value.real;
+    var c11 = mat.value[0].value[1].value.real * 2;
+    var c10 = mat.value[0].value[2].value.real * 2;
+    var c02 = mat.value[1].value[1].value.real;
+    var c01 = mat.value[1].value[2].value.real * 2;
+    var c00 = mat.value[2].value[2].value.real;
+
+    // The adjoint matrix k## values
+    var k20 = 4 * c00 * c02 - c01 * c01;
+    var k11 = c01 * c10 - 2 * c00 * c11;
+    var k10 = c01 * c11 - 2 * c02 * c10;
+    var k02 = 4 * c00 * c20 - c10 * c10;
+    var k01 = c10 * c11 - 2 * c01 * c20;
+    var k00 = 4 * c02 * c20 - c11 * c11;
+
+    var discr = k00;
+    var det = c02 * k02 + c11 * k11 + c20 * k20 - c00 * k00;
+
+    // conic center
+    var ccx = k10 / k00;
+    var ccy = k01 / k00;
+
+    if (det < 0) {
+        c20 = -c20;
+        c11 = -c11;
+        c10 = -c10;
+        c02 = -c02;
+        c01 = -c01;
+        c00 = -c00;
+        det = -det;
+    }
+
+    // Check which side of the conic a given point is on.
+    // Sign 1 means inside, i.e. polar has complex points of intersection.
+    // Sign -1 means outside, i.e. polar has real points of intersection.
+    // Sign 0 would be on conic, but numeric noise will drown those out.
+    // Note that this distinction is arbitrary for degenerate conics.
+    function sign(x, y) {
+        var s = (c20 * x + c11 * y + c10) * x + (c02 * y + c01) * y + c00;
+        if (s >= 0) return 1;
+        if (s < 0) return -1;
+        return NaN;
+    }
+
+    function mkp(x, y) {
+        return {
+            x: x,
+            y: y,
+        };
+    }
+
+    // Intersect conic with boundary of canvas
+    var yLeft = solveRealQuadratic(c02, c01, c00); // x = 0
+    var yRight = solveRealQuadratic( // x = csw
+        c02, c11 * csw + c01, (c20 * csw + c10) * csw + c00);
+    var xTop = solveRealQuadratic(c20, c10, c00); // y = 0
+    var xBottom = solveRealQuadratic(
+        c20, c11 * csh + c10, (c02 * csh + c01) * csh + c00);
+    var tl = sign(0, 0);
+    var tr = sign(csw, 0);
+    var bl = sign(0, csh);
+    var br = sign(csw, csh);
+    if (!isFinite(tl * tr * bl * br))
+        return;
+    var boundary = [];
+
+    function doBoundary(sign1, sign2, sol, other, vert, sort, extent) {
+        var coord, signMid;
+        if (sign1 !== sign2) { // we need exactly one point of intersection
+            if (sol === null)
+                return false;
+            coord = 0.5 * (sol[0] + sol[1]);
+            if (coord > 0 && coord < extent) {
+                // solutions might be close to opposite corners,
+                // so we use the sign to pick the appropriate one
+                if (sol[0] > sol[1])
+                    sol = [sol[1], sol[0]];
+                signMid = vert ? sign(other, coord) : sign(coord, other);
+                // We have two possible arrangements or corners and crossings:
+                //          sign1 == signMid != sign2
+                //    sol[0]               sol[1]
+                // sign1 != signMid == sign2
+                coord = sol[signMid === sign2 ? 0 : 1];
+            } else {
+                // solutions will be off to one side, so we pick the
+                // one which is closer to the center of this egde
+                var center = extent * 0.5;
+                var dist0 = Math.abs(center - sol[0]);
+                var dist1 = Math.abs(center - sol[1]);
+                coord = sol[dist0 < dist1 ? 0 : 1];
+            }
+            boundary.push(vert ? mkp(other, coord) : mkp(coord, other));
+        } else { // we need zero or two points of intersection
+            if (sol === null) // have zero intersections
+                return true;
+            coord = 0.5 * (sol[0] + sol[1]);
+            if (!(coord > 0 && coord < extent))
+                return true;
+            signMid = vert ? sign(other, coord) : sign(coord, other);
+            if (signMid === sign1) // intersections outside segment
+                return true;
+            if (isNaN(signMid))
+                return true;
+            // Have two points of solution
+            sort = sort * (sol[1] - sol[0]) > 0 ? 0 : 1;
+            coord = sol[sort];
+            boundary.push(vert ? mkp(other, coord) : mkp(coord, other));
+            coord = sol[1 - sort];
+            boundary.push(vert ? mkp(other, coord) : mkp(coord, other));
+        }
+        return true;
+    }
+
+    if (!(doBoundary(tl, bl, yLeft, 0, true, 1, csh) &&
+            doBoundary(bl, br, xBottom, csh, false, 1, csw) &&
+            doBoundary(tr, br, yRight, csw, true, -1, csh) &&
+            doBoundary(tl, tr, xTop, 0, false, -1, csw)))
+        return;
+
+    function segmentEllipse() {
+        if (discr <= 0)
+            return false;
+
+        var initialLength = boundary.length;
+        var x, y;
+
+        // Compute the roots of the y discriminant
+        // for points with vertical tangents
+        sol = solveRealQuadratic(k00, -2 * k10, k20);
+        if (sol)
+            for (i = 0; i < 2; ++i) {
+                x = sol[i];
+                y = -0.5 * (c11 * x + c01) / c02;
+                if (x >= 0 && x <= csw && y >= 0 && y <= csh)
+                    boundary.push(mkp(x, y));
+            }
+
+        // Compute the roots of the x discriminant
+        // for points with horizontal tangents
+        sol = solveRealQuadratic(k00, -2 * k01, k02);
+        if (sol)
+            for (i = 0; i < 2; ++i) {
+                y = sol[i];
+                x = -0.5 * (c11 * y + c10) / c20;
+                if (x >= 0 && x <= csw && y >= 0 && y <= csh)
+                    boundary.push(mkp(x, y));
+            }
+
+        if (boundary.length === initialLength)
+            return false;
+
+        if (csctx.special) { // begin DEBUG code
+            csctx.special.push([ccx, ccy]);
+            for (i = initialLength; i < boundary.length; ++i)
+                csctx.special.push([boundary[i].x, boundary[i].y]);
+        } // end DEBUG code
+        for (i = 0; i < boundary.length; ++i)
+            boundary[i].angle = Math.atan2(
+                boundary[i].y - ccy, boundary[i].x - ccx);
+        boundary.sort(function(a, b) {
+            return b.angle - a.angle; // counter-clockwise in y is down cosy
+        });
+        return true;
+    }
+
+    csctx.beginPath();
+    if (boundary.length === 0) {
+        segmentEllipse();
+        if (boundary.length !== 4)
+            return;
+        csctx.moveTo(boundary[0].x, boundary[0].y);
+        for (i = 0; i < 4; ++i)
+            drawArc(boundary[i], boundary[(i + 1) & 3]);
+        csctx.closePath();
+    } else if (boundary.length > 4) {
+        // Ellipse; we always connect points spanning an outside segment.
+        for (i = (tl === 1 ? 0 : 1); i < boundary.length; i += 2) {
+            csctx.moveTo(boundary[i].x, boundary[i].y);
+            drawArc(boundary[i], boundary[(i + 1) % boundary.length]);
+        }
+    } else if (boundary.length === 2) {
+        var p0 = boundary[0];
+        var p1 = boundary[1];
+        if (segmentEllipse()) {
+            var i0 = boundary.indexOf(p0);
+            var i1 = boundary.indexOf(p1);
+            var iMin = Math.min(i0, i1);
+            var iMax = Math.max(i0, i1);
+            if (!(iMin === 0 && iMax === boundary.length - 1))
+                boundary = boundary.slice(iMax).concat(
+                    boundary.slice(0, iMin + 1));
+        }
+        csctx.moveTo(boundary[0].x, boundary[0].y);
+        for (i = 1; i < boundary.length; ++i)
+            drawArc(boundary[i - 1], boundary[i]);
+    } else { // 4 points of intersection
+        // We have 4 points of intersection.  For a hyperbola, these
+        // may belong to different branches.  If the line joining them
+        // intersects the line at infinity on the inside, they belong
+        // to different branches and the boundary between the points
+        // we want to connect is on the inside es well.  If the line
+        // intersects infinity on the outside, they belong to the same
+        // branch and we want to connect points which have some
+        // outside boundary between them.  We do the computation twice
+        // and take the stronger signal, i.e. larger absolute value.
+        var best = 0;
+        for (i = 0; i < 2; ++i) {
+            var ptA = boundary[i];
+            var ptB = boundary[i + 2];
+            var dx = ptB.x - ptA.x;
+            var dy = ptB.y - ptA.y;
+            // compute sign at infinity
+            var s = (c20 * dx + c11 * dy) * dx + c02 * dy * dy;
+            if (Math.abs(s) > Math.abs(best))
+                best = s;
+            ptA = ptB;
+        }
+        if (isNaN(best))
+            return;
+        best *= tl;
+        for (i = (best >= 0 ? 1 : 0); i < 4; i += 2)
+            boundary[i].end = boundary[(i + 1) & 3];
+
+        segmentEllipse();
+        var n = boundary.length;
+        boundary = boundary.concat(boundary); // wrap around
+        for (i = 0; i < n; ++i) {
+            var start = boundary[i];
+            var end = start.end;
+            if (!end)
+                continue;
+            csctx.moveTo(start.x, start.y);
+            for (var j = i; boundary[j] !== end; ++j)
+                drawArc(boundary[j], boundary[j + 1]);
+        }
+    }
+    csctx.stroke();
+
+    function drawArc(pt1, pt2) {
+        var x1 = pt1.x;
+        var y1 = pt1.y;
+        var x2 = pt2.x;
+        var y2 = pt2.y;
+
+        // u is the line joining pt1 and pt2
+        var ux = y1 - y2;
+        var uy = x2 - x1;
+        var uz = x1 * y2 - y1 * x2;
+        // c is the proposed control point, computed as pole of u
+        var cz = k10 * ux + k01 * uy + k00 * uz;
+        if (Math.abs(cz) < CSNumber.eps)
+            return csctx.lineTo(x2, y2);
+        var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
+        var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
+        // m is the midpoint of x1 and x2
+        var mx = 0.5 * (x1 + x2);
+        var my = 0.5 * (y1 + y2);
+        var k = 1 / (1 + Math.sqrt(-sign(cx, cy) / sign(mx, my)));
+        if (isNaN(k)) k = 1;
+        var j = 1 - k;
+        var dx = cx - mx;
+        var dy = cy - my;
+        var s = dx * dx + dy * dy;
+        if (s * k * k < maxError) {
+            csctx.lineTo(x2, y2);
+        } else if (s * j * j < maxError) {
+            csctx.lineTo(cx, cy);
+            csctx.lineTo(x2, y2);
+        } else {
+            refine(x1, y1, cx, cy, x2, y2, k, 0);
+        }
+    }
+
+    function refine(Ax, Ay, Bx, By, Cx, Cy, k, n) {
+        var Mx = 0.5 * (Ax + Cx);
+        var My = 0.5 * (Ay + Cy);
+        var Fx = 0.5 * (Bx + Mx);
+        var Fy = 0.5 * (By + My);
+        var kBx = k * Bx;
+        var kBy = k * By;
+        var j = 1 - k;
+        var Gx = kBx + j * Mx;
+        var Gy = kBy + j * My;
+        var dx = Fx - Gx;
+        var dy = Fy - Gy;
+        if (dx * dx + dy * dy < maxError || n > 10) {
+            csctx.quadraticCurveTo(Bx, By, Cx, Cy);
+        } else {
+            var kr = 1 / (Math.sqrt(2 * j) + 1);
+            ++n;
+            refine(Ax, Ay, kBx + j * Ax, kBy + j * Ay, Gx, Gy, kr, n);
+            refine(Gx, Gy, kBx + j * Cx, kBy + j * Cy, Cx, Cy, kr, n);
+        }
+    }
+
+}; // end eval_helper.drawconic2
+
 evaluator.drawall$1 = function(args, modifs) {
     var v1 = evaluate(args[0]);
     if (v1.ctype === "list") {
