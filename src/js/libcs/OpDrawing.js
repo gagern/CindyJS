@@ -377,9 +377,6 @@ function solveRealQuadraticHomog(a, b, c) {
 // Returns either null (if both solutions would be complex or NaN)
 // or two values x satisfying ax^2 + bx + c = 0
 function solveRealQuadratic(a, b, c) {
-    //var hom = solveRealQuadraticHomog(a, b, c);
-    //if (hom === null) return null;
-    //return [hom[0][0] / hom[0][1], hom[1][0] / hom[1][1]];
     b *= 0.5;
     var d = b * b - a * c;
     /*jshint -W018 */
@@ -414,7 +411,7 @@ DbgCtx.prototype = {
         this.delegate.lineTo(x, y);
     },
     quadraticCurveTo: function(x1, y1, x, y) {
-        console.log("quadratocCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
+        console.log("quadraticCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
         this.ctls.push([x1, y1]);
         this.pts.push([x, y]);
         this.delegate.quadraticCurveTo(x1, y1, x, y);
@@ -512,12 +509,16 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     var det = c02 * k02 + c11 * k11 + c20 * k20 - c00 * k00;
     if (!isFinite(det)) return;
 
+    // conic center
+    var ccx = k10 / k00;
+    var ccy = k01 / k00;
+
     // Check which side of the conic a given point is on.
     // Sign 1 means inside, i.e. polar has complex points of intersection.
     // Sign -1 means outside, i.e. polar has real points of intersection.
     // Sign 0 would be on conic, but numeric noise will drown those out.
     // Note that this distinction is arbitrary for degenerate conics.
-    function sign(x, y) {
+    function conic(x, y) {
         return (c20 * x + c11 * y + c10) * x + (c02 * y + c01) * y + c00;
     }
 
@@ -546,7 +547,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
 
     var points = [];
     // Inside state of first corner at top left
-    var bInside = (sign(0, 0) < 0) === (det < 0);
+    var bInside = (conic(0, 0) < 0) === (det < 0);
 
     function doBoundary(sol, other, vert, sort, extent) {
         // Edge cannot be inside if there are no solutions.
@@ -610,24 +611,38 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     var next;
     var n = points.length;
     if (n < 2) return; // Nothing to draw
-    var i = n - 1;
-    var previous = points[i]; // Wrap-around
+    var i;
+    var j = -1;
     var previousBegin = null;
-    do {
-        next = points[i];
-        if (next.t === "begin") {
-            previousBegin = next;
-            break;
+    // For hyperbola with its center within the boundaries, setup to
+    // draw arc from "end" to back to previous "begin"
+    if (k00 < 0 && 0 < ccx && ccx < csw && 0 < ccy && ccy < csh) {
+        // In the case of a hyperbola, check for two separate pathes
+        for (i = 0; i < n; ++i) {
+            if (points[i].t === "begin") {
+                if (j >= 0) {
+                    // When second "begin" is found, rotate the points
+                    // if needed so that the first "begin" is at start
+                    if (j != 0) {
+                        points = points.slice(j).concat(points.slice(0, j));
+                    }
+                    previousBegin = points[0];
+                    break;
+                }
+                j = i;
+            }
         }
-    } while (--i > 0);
-    if (!(k00 < 0 && previous.t === "end")) csctx.moveTo(previous.x, previous.y);
+    }
+    var previous = points[n - 1]; // Wrap-around
+    if (!previousBegin) csctx.moveTo(previous.x, previous.y);
     for (i = 0; i < n; ++i) {
         next = points[i];
         switch (next.t) {
             case "begin":
-                previousBegin = next;
-                if (k00 < 0) csctx.moveTo(next.x, next.y);
-                else drawArc(previous, next);
+                if (previousBegin) {
+                    previousBegin = next;
+                    csctx.moveTo(next.x, next.y);
+                } else drawArc(previous, next);
                 break;
             case "corner":
                 if (df !== "D") csctx.lineTo(next.x, next.y);
@@ -635,7 +650,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
             case "end":
                 if (df !== "D") csctx.lineTo(next.x, next.y);
                 else csctx.moveTo(next.x, next.y);
-                if (k00 < 0) drawArc(next, previousBegin);
+                if (previousBegin) drawArc(next, previousBegin);
                 break;
             case "split":
                 drawArc(previous, next);
@@ -679,7 +694,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
         // m is the midpoint of x1 and x2
         var mx = 0.5 * (x1 + x2);
         var my = 0.5 * (y1 + y2);
-        var k = 1 / (1 + Math.sqrt(-sign(cx, cy) / sign(mx, my)));
+        var k = 1 / (1 + Math.sqrt(-conic(cx, cy) / conic(mx, my)));
         if (isNaN(k)) k = 1;
         var j = 1 - k;
         var dx = cx - mx;
