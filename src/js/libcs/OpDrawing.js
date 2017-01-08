@@ -376,11 +376,15 @@ function solveRealQuadraticHomog(a, b, c) {
 
 // Returns either null (if both solutions would be complex or NaN)
 // or two values x satisfying ax^2 + bx + c = 0
+// Note that if a === 0 then there is only one solution x === -c / b
 function solveRealQuadratic(a, b, c) {
     b *= 0.5;
     var d = b * b - a * c;
     /*jshint -W018 */
-    if (!(d >= 0)) return null; // also return null if d is NaN
+    // Treat tiny bit negative as zero else null if more negative or NaN
+    if (!(d >= 0))
+        if (d >= -CSNumber.eps * (b * b)) d = 0;
+        else return null;
     /*jshint +W018 */
     var r = Math.sqrt(d);
     if (b > 0) r = -r;
@@ -513,10 +517,18 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     var ccx = k10 / k00;
     var ccy = k01 / k00;
 
-    // Check which side of the conic a given point is on.
-    // Sign 1 means inside, i.e. polar has complex points of intersection.
-    // Sign -1 means outside, i.e. polar has real points of intersection.
-    // Sign 0 would be on conic, but numeric noise will drown those out.
+    // Are midpoints of horizontal and vertical intersections inside the conic?
+    var hInside = true;
+    var vInside = true;
+    if (k00 < 0) {
+        hInside = (c20 < 0) !== (det < 0);
+        vInside = (c02 < 0) !== (det < 0);
+    }
+
+    // conic(x, y) === 0 is the equation for the conic. It distinguishes one
+    // side of the conic from the other for a given point just like for a line.
+    // conic(ccx, ccy) === det / k00 where k00 is the discriminant
+    // When (conic(x, y) < 0) === (det < 0) the point is inside the conic.
     // Note that this distinction is arbitrary for degenerate conics.
     function conic(x, y) {
         return (c20 * x + c11 * y + c10) * x + (c02 * y + c01) * y + c00;
@@ -546,54 +558,70 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
     ];
 
     var points = [];
-    // Inside state of first corner at top left
-    var bInside = (conic(0, 0) < 0) === (det < 0);
 
-    function doBoundary(sol, other, vert, sort, extent) {
+    function cleanTail() {
+        if (points.length < 3) return;
+        var pt = points[0];
+        if (pt.t !== "split" && points.length > 0) {
+            var pp = points[points.length - 1];
+            if (Math.abs(pp.x - pt.x) < CSNumber.eps &&
+                Math.abs(pp.y - pt.y) < CSNumber.eps) {
+                if (pp.t === pt.t || pt.t === "corner") {
+                    points[0] = points.pop();
+                } else if (pp.t === "corner") points.pop();
+            }
+        }
+    }
+
+    function cleanPush(vert, other, coord, t) {
+        var pt = vert ? mkp(other, coord, t) : mkp(coord, other, t);
+        if (pt.t !== "split" && points.length > 0) {
+            var pp = points[points.length - 1];
+            if (Math.abs(pp.x - pt.x) < CSNumber.eps &&
+                Math.abs(pp.y - pt.y) < CSNumber.eps) {
+                if (pp.t === pt.t || pt.t === "corner") return;
+                if (pp.t === "corner") points.pop();
+            }
+        }
+        points.push(pt);
+    }
+
+    function doBoundary(sol, other, vert, fwd, extent) {
         // Edge cannot be inside if there are no solutions.
-        var t;
-        if (sol !== null) {
-            var coord, pt;
-            var extent0 = sort > 0 ? 0 : extent;
-            var extent1 = sort > 0 ? extent : 0;
-            // Only include each first corner that falls within the conic
-            if (bInside) {
-                t = "corner";
-                coord = extent0;
-                pt = vert ? mkp(other, coord, t) : mkp(coord, other, t);
-                points.push(pt);
-            }
-            coord = sort > 0 ? sol[0] : sol[1];
-            if (0 < coord && coord < extent || coord === extent1) {
-                bInside = !bInside; // toggles at an intersection
-                t = bInside ? "begin" : "end";
-                pt = vert ? mkp(other, coord, t) : mkp(coord, other, t);
-                points.push(pt);
-            }
-            coord = sort > 0 ? sol[1] : sol[0];
-            if (0 < coord && coord < extent || coord === extent0) {
-                bInside = !bInside; // toggles at an intersection
-                t = bInside ? "begin" : "end";
-                pt = vert ? mkp(other, coord, t) : mkp(coord, other, t);
-                points.push(pt);
-            }
+        var eps = CSNumber.eps;
+        if (sol) {
+            // Is the midpoint of the intersections with this boundary inside?
+            var smInside = vert ? vInside : hInside;
+            var coord = fwd ? 0 : extent;
+            if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
+                cleanPush(vert, other, coord, "corner");
+            coord = fwd ? sol[0] : sol[1];
+            if (0 - eps < coord && coord < extent + eps)
+                cleanPush(vert, other, coord, smInside ? "begin" : "end");
+            coord = fwd ? sol[1] : sol[0];
+            if (0 - eps < coord && coord < extent + eps)
+                cleanPush(vert, other, coord, smInside ? "end" : "begin");
+            coord = fwd ? extent : 0;
+            if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
+                cleanPush(vert, other, coord, "corner");
         } else {
             var x, y;
             var flat = flats[vert ? 0 : 1];
-            if (flat !== null) {
-                t = "split";
+            if (flat) {
                 flat = flat[other === 0 ? 0 : 1];
                 if (vert) { // xFlat for vertical tangent to oval
                     x = flat;
-                    if (0 <= x && x <= csw) {
+                    if (0 - eps < x && x < csw + eps) {
                         y = -0.5 * (c11 * x + c01) / c02;
-                        if (0 <= y && y <= csh) points.push(mkp(x, y, t));
+                        if (0 - eps < y && y < csh + eps)
+                            points.push(mkp(x, y, "split"));
                     }
                 } else { // !vert => yFlat for horizontal tangent to oval
                     y = flat;
-                    if (0 <= y && y <= csh) {
+                    if (0 - eps < y && y < csh + eps) {
                         x = -0.5 * (c11 * y + c10) / c20;
-                        if (0 <= x && x <= csw) points.push(mkp(x, y, t));
+                        if (0 - eps < x && x < csw + eps)
+                            points.push(mkp(x, y, "split"));
                     }
                 }
             }
@@ -601,42 +629,40 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
         return true;
     }
 
-    if (!(doBoundary(yLeft, 0, true, +1, csh) &&
-            doBoundary(xBottom, csh, false, +1, csw) &&
-            doBoundary(yRight, csw, true, -1, csh) &&
-            doBoundary(xTop, 0, false, -1, csw)))
+    if (!(doBoundary(yLeft, 0, true, true, csh) &&
+            doBoundary(xBottom, csh, false, true, csw) &&
+            doBoundary(yRight, csw, true, false, csh) &&
+            doBoundary(xTop, 0, false, false, csw)))
         return;
 
-    csctx.beginPath();
-    var next;
+    cleanTail();
+
+    //console.log("points="+JSON.stringify(points));
+
     var n = points.length;
     if (n < 2) return; // Nothing to draw
-    var i;
-    var j = -1;
+    var j = 0;
     var previousBegin = null;
     // For hyperbola with its center within the boundaries, setup to
     // draw arc from "end" to back to previous "begin"
     if (k00 < 0 && 0 < ccx && ccx < csw && 0 < ccy && ccy < csh) {
-        // In the case of a hyperbola, check for two separate pathes
-        for (i = 0; i < n; ++i) {
-            if (points[i].t === "begin") {
-                if (j >= 0) {
-                    // When second "begin" is found, rotate the points
-                    // if needed so that the first "begin" is at start
-                    if (j !== 0) {
-                        points = points.slice(j).concat(points.slice(0, j));
-                    }
-                    previousBegin = points[0];
-                    break;
-                }
-                j = i;
+        for (j = 0; j < n; ++j) {
+            if (points[j].t === "begin") {
+                previousBegin = points[j];
+                break;
             }
         }
     }
-    var previous = points[n - 1]; // Wrap-around
+    var previous = points[j > 0 ? j - 1 : n - 1];
+    csctx.beginPath();
     if (!previousBegin) csctx.moveTo(previous.x, previous.y);
-    for (i = 0; i < n; ++i) {
-        next = points[i];
+    // Draw segments along the boundary edge from begin->(corner*)->end
+    // and arcs from end->(split*)->begin
+    var i;
+    var next;
+    for (i = 0; i < n; ++i, ++j) {
+        if (j >= n) j -= n; // Wrap-around
+        next = points[j];
         switch (next.t) {
             case "begin":
                 if (previousBegin) {
