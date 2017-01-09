@@ -63,7 +63,7 @@ function drawgeoconic(el) {
     modifs.alpha = el.alpha;
     modifs.size = el.size;
 
-    eval_helper.drawconic(el.matrix, modifs);
+    eval_helper.drawconic(el.matrix, modifs, "D");
 
 
 }
