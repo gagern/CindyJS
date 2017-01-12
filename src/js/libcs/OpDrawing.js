@@ -377,9 +377,18 @@ function solveRealQuadraticHomog(a, b, c) {
 // Returns either null (if solutions would be complex or NaN)
 // or two values x satisfying ax^2 + bx + c = 0
 function solveRealQuadratic(a, b, c) {
-    var hom = solveRealQuadraticHomog(a, b, c);
-    if (hom === null) return null;
-    return [hom[0][0] / hom[0][1], hom[1][0] / hom[1][1]];
+    b *= 0.5;
+    var d = b * b - a * c;
+    /*jshint -W018 */
+    // Treat tiny bit negative as zero else null if more negative or NaN
+    if (!(d >= 0))
+        if (d >= -CSNumber.eps * (b * b)) d = 0;
+        else return null;
+    /*jshint +W018 */
+    var r = Math.sqrt(d);
+    if (b > 0) r = -r;
+    var s = [(r - b) / a, c / (r - b)];
+    return s[0] <= s[1] ? s : [s[1], s[0]];
 }
 
 function DbgCtx() {
@@ -441,7 +450,7 @@ DbgCtx.prototype = {
     },
 };
 
-eval_helper.drawconic = function(conicMatrix, modifs) {
+eval_helper.drawconic1 = function(conicMatrix, modifs) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
@@ -778,7 +787,7 @@ eval_helper.drawconic = function(conicMatrix, modifs) {
         csctx.quadraticCurveTo(cx, cy, x2, y2);
     }
 
-}; // end eval_helper.drawconic
+}; // end eval_helper.drawconic1
 
 eval_helper.drawconic2 = function(conicMatrix, modifs) {
     //var csctx = new DbgCtx();
@@ -845,6 +854,15 @@ eval_helper.drawconic2 = function(conicMatrix, modifs) {
         if (s >= 0) return 1;
         if (s < 0) return -1;
         return NaN;
+    }
+
+    // conic(x, y) === 0 is the equation for the conic. It distinguishes one
+    // side of the conic from the other for a given point just like for a line.
+    // conic(ccx, ccy) === det / k00 where k00 is the discriminant
+    // When (conic(x, y) < 0) === (det < 0) the point is inside the conic.
+    // Note that this distinction is arbitrary for degenerate conics.
+    function conic(x, y) {
+        return (c20 * x + c11 * y + c10) * x + (c02 * y + c01) * y + c00;
     }
 
     function mkp(x, y) {
@@ -1060,7 +1078,7 @@ eval_helper.drawconic2 = function(conicMatrix, modifs) {
         // m is the midpoint of x1 and x2
         var mx = 0.5 * (x1 + x2);
         var my = 0.5 * (y1 + y2);
-        var k = 1 / (1 + Math.sqrt(-sign(cx, cy) / sign(mx, my)));
+        var k = 1 / (1 + Math.sqrt(-conic(cx, cy) / conic(mx, my)));
         if (isNaN(k)) k = 1;
         var j = 1 - k;
         var dx = cx - mx;
@@ -1099,6 +1117,294 @@ eval_helper.drawconic2 = function(conicMatrix, modifs) {
     }
 
 }; // end eval_helper.drawconic2
+
+eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
+    // var csctx = new DbgCtx();
+    Render2D.handleModifs(modifs, Render2D.conicModifs);
+    if (Render2D.lsize === 0 && df === "D")
+        return;
+    Render2D.preDrawCurve();
+
+    var maxError = 0.04; // squared distance in px^2
+
+    // Transform matrix of conic to match canvas coordinate system
+    var mat = List.normalizeMax(conicMatrix);
+    if (!List._helper.isAlmostReal(mat))
+        return;
+    var tmat = csport.toMat();
+    mat = List.mult(List.transpose(tmat), mat);
+    mat = List.mult(mat, tmat);
+    mat = List.normalizeMax(mat);
+
+    // Using polynomial coefficients instead of matrix
+    // since it generalizes to higher degrees more easily.
+    // cij is the coefficient of the monomial x^i * y^j.
+    var c20 = mat.value[0].value[0].value.real;
+    var c11 = mat.value[0].value[1].value.real * 2;
+    var c10 = mat.value[0].value[2].value.real * 2;
+    var c02 = mat.value[1].value[1].value.real;
+    var c01 = mat.value[1].value[2].value.real * 2;
+    var c00 = mat.value[2].value[2].value.real;
+
+    // The adjoint matrix k## values
+    var k20 = 4 * c00 * c02 - c01 * c01;
+    var k11 = c01 * c10 - 2 * c00 * c11;
+    var k10 = c01 * c11 - 2 * c02 * c10;
+    var k02 = 4 * c00 * c20 - c10 * c10;
+    var k01 = c10 * c11 - 2 * c01 * c20;
+    var k00 = 4 * c02 * c20 - c11 * c11;
+
+    var det = c02 * k02 + c11 * k11 + c20 * k20 - c00 * k00;
+    if (!isFinite(det)) return;
+
+    // conic center
+    var ccx = k10 / k00;
+    var ccy = k01 / k00;
+
+    // Are midpoints of horizontal and vertical intersections inside the conic?
+    var hInside = true;
+    var vInside = true;
+    if (k00 < 0) {
+        hInside = (c20 < 0) !== (det < 0);
+        vInside = (c02 < 0) !== (det < 0);
+    }
+
+    // conic(x, y) === 0 is the equation for the conic. It distinguishes one
+    // side of the conic from the other for a given point just like for a line.
+    // conic(ccx, ccy) === det / k00 where k00 is the discriminant
+    // When (conic(x, y) < 0) === (det < 0) the point is inside the conic.
+    // Note that this distinction is arbitrary for degenerate conics.
+    function conic(x, y) {
+        return (c20 * x + c11 * y + c10) * x + (c02 * y + c01) * y + c00;
+    }
+
+    function mkp(x, y, t) {
+        return {
+            x: x,
+            y: y,
+            t: t
+        };
+    }
+
+    // Intersect conic with boundary of canvas
+    var yLeft = solveRealQuadratic(c02, c01, c00); // x = 0
+    var yRight = solveRealQuadratic( // x = csw
+        c02, c11 * csw + c01, (c20 * csw + c10) * csw + c00);
+    var xTop = solveRealQuadratic(c20, c10, c00); // y = 0
+    var xBottom = solveRealQuadratic( // y = csh
+        c20, c11 * csh + c10, (c02 * csh + c01) * csh + c00);
+
+    // For ovals compute the roots of the x and y discriminant for
+    // the horizontal and vertical tangent points respectively
+    var flats = k00 <= 0 ? [null, null] : [
+        solveRealQuadratic(k00, -2 * k10, k20),
+        solveRealQuadratic(k00, -2 * k01, k02)
+    ];
+
+    var points = [];
+
+    function cleanTail() {
+        if (points.length < 3) return;
+        var pt = points[0];
+        if (pt.t !== "split" && points.length > 0) {
+            var pp = points[points.length - 1];
+            if (Math.abs(pp.x - pt.x) < CSNumber.eps &&
+                Math.abs(pp.y - pt.y) < CSNumber.eps) {
+                if (pp.t === pt.t || pt.t === "corner") {
+                    points[0] = points.pop();
+                } else if (pp.t === "corner") points.pop();
+            }
+        }
+    }
+
+    function cleanPush(vert, other, coord, t) {
+        var pt = vert ? mkp(other, coord, t) : mkp(coord, other, t);
+        if (pt.t !== "split" && points.length > 0) {
+            var pp = points[points.length - 1];
+            if (Math.abs(pp.x - pt.x) < CSNumber.eps &&
+                Math.abs(pp.y - pt.y) < CSNumber.eps) {
+                if (pp.t === pt.t || pt.t === "corner") return;
+                if (pp.t === "corner") points.pop();
+            }
+        }
+        points.push(pt);
+    }
+
+    function doBoundary(sol, other, vert, fwd, extent) {
+        // Edge cannot be inside if there are no solutions.
+        var eps = CSNumber.eps;
+        if (sol) {
+            // Is the midpoint of the intersections with this boundary inside?
+            var smInside = vert ? vInside : hInside;
+            var coord = fwd ? 0 : extent;
+            if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
+                cleanPush(vert, other, coord, "corner");
+            coord = fwd ? sol[0] : sol[1];
+            if (0 - eps < coord && coord < extent + eps)
+                cleanPush(vert, other, coord, smInside ? "begin" : "end");
+            coord = fwd ? sol[1] : sol[0];
+            if (0 - eps < coord && coord < extent + eps)
+                cleanPush(vert, other, coord, smInside ? "end" : "begin");
+            coord = fwd ? extent : 0;
+            if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
+                cleanPush(vert, other, coord, "corner");
+        } else {
+            var x, y;
+            var flat = flats[vert ? 0 : 1];
+            if (flat) {
+                flat = flat[other === 0 ? 0 : 1];
+                if (vert) { // xFlat for vertical tangent to oval
+                    x = flat;
+                    if (0 - eps < x && x < csw + eps) {
+                        y = -0.5 * (c11 * x + c01) / c02;
+                        if (0 - eps < y && y < csh + eps)
+                            points.push(mkp(x, y, "split"));
+                    }
+                } else { // !vert => yFlat for horizontal tangent to oval
+                    y = flat;
+                    if (0 - eps < y && y < csh + eps) {
+                        x = -0.5 * (c11 * y + c10) / c20;
+                        if (0 - eps < x && x < csw + eps)
+                            points.push(mkp(x, y, "split"));
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    if (!(doBoundary(yLeft, 0, true, true, csh) &&
+            doBoundary(xBottom, csh, false, true, csw) &&
+            doBoundary(yRight, csw, true, false, csh) &&
+            doBoundary(xTop, 0, false, false, csw)))
+        return;
+
+    cleanTail();
+
+    //console.log("points="+JSON.stringify(points));
+
+    var n = points.length;
+    if (n < 2) return; // Nothing to draw
+    var j = 0;
+    var previousBegin = null;
+    // For hyperbola with its center within the boundaries, setup to
+    // draw arc from "end" to back to previous "begin"
+    if (k00 < 0 && 0 < ccx && ccx < csw && 0 < ccy && ccy < csh) {
+        for (j = 0; j < n; ++j) {
+            if (points[j].t === "begin") {
+                previousBegin = points[j];
+                break;
+            }
+        }
+    }
+    var previous = points[j > 0 ? j - 1 : n - 1];
+    csctx.beginPath();
+    if (!previousBegin) csctx.moveTo(previous.x, previous.y);
+    // Draw segments along the boundary edge from begin->(corner*)->end
+    // and arcs from end->(split*)->begin
+    var i;
+    var next;
+    for (i = 0; i < n; ++i, ++j) {
+        if (j >= n) j -= n; // Wrap-around
+        next = points[j];
+        switch (next.t) {
+            case "begin":
+                if (previousBegin) {
+                    previousBegin = next;
+                    csctx.moveTo(next.x, next.y);
+                } else drawArc(previous, next);
+                break;
+            case "corner":
+                if (df !== "D") csctx.lineTo(next.x, next.y);
+                break;
+            case "end":
+                if (df !== "D") csctx.lineTo(next.x, next.y);
+                else csctx.moveTo(next.x, next.y);
+                if (previousBegin) drawArc(next, previousBegin);
+                break;
+            case "split":
+                drawArc(previous, next);
+                break;
+        }
+        previous = next;
+    }
+
+    if (csctx.special) { // begin DEBUG code
+        for (i = 0; i < points.length; ++i)
+            csctx.special.push([points[i].x, points[i].y]);
+    } // end DEBUG code
+
+    if (df === "D") {
+        csctx.stroke();
+    }
+    if (df === "F") {
+        csctx.fillStyle = Render2D.lineColor;
+        csctx.fill();
+    }
+    if (df === "C") {
+        csctx.clip();
+    }
+
+    function drawArc(pt1, pt2) {
+        var x1 = pt1.x;
+        var y1 = pt1.y;
+        var x2 = pt2.x;
+        var y2 = pt2.y;
+
+        // u is the line joining pt1 and pt2
+        var ux = y1 - y2;
+        var uy = x2 - x1;
+        var uz = x1 * y2 - y1 * x2;
+        // c is the proposed control point, computed as pole of u
+        var cz = k10 * ux + k01 * uy + k00 * uz;
+        if (Math.abs(cz) < CSNumber.eps)
+            return csctx.lineTo(x2, y2);
+        var cx = (k20 * ux + k11 * uy + k10 * uz) / cz;
+        var cy = (k11 * ux + k02 * uy + k01 * uz) / cz;
+        // m is the midpoint of x1 and x2
+        var mx = 0.5 * (x1 + x2);
+        var my = 0.5 * (y1 + y2);
+        var k = 1 / (1 + Math.sqrt(-conic(cx, cy) / conic(mx, my)));
+        if (isNaN(k)) k = 1;
+        var j = 1 - k;
+        var dx = cx - mx;
+        var dy = cy - my;
+        var s = dx * dx + dy * dy;
+        if (s * k * k < maxError) {
+            csctx.lineTo(x2, y2);
+        } else if (s * j * j < maxError) {
+            csctx.lineTo(cx, cy);
+            csctx.lineTo(x2, y2);
+        } else {
+            refine(x1, y1, cx, cy, x2, y2, k, 0);
+        }
+    }
+
+    function refine(Ax, Ay, Bx, By, Cx, Cy, k, n) {
+        var Mx = 0.5 * (Ax + Cx);
+        var My = 0.5 * (Ay + Cy);
+        var Fx = 0.5 * (Bx + Mx);
+        var Fy = 0.5 * (By + My);
+        var kBx = k * Bx;
+        var kBy = k * By;
+        var j = 1 - k;
+        var Gx = kBx + j * Mx;
+        var Gy = kBy + j * My;
+        var dx = Fx - Gx;
+        var dy = Fy - Gy;
+        if (dx * dx + dy * dy < maxError || n > 10) {
+            csctx.quadraticCurveTo(Bx, By, Cx, Cy);
+        } else {
+            var kr = 1 / (Math.sqrt(2 * j) + 1);
+            ++n;
+            refine(Ax, Ay, kBx + j * Ax, kBy + j * Ay, Gx, Gy, kr, n);
+            refine(Gx, Gy, kBx + j * Cx, kBy + j * Cy, Cx, Cy, kr, n);
+        }
+    }
+
+}; // end eval_helper.drawconic3
+
+eval_helper.drawconic = eval_helper.drawconic3;
 
 evaluator.drawall$1 = function(args, modifs) {
     var v1 = evaluate(args[0]);

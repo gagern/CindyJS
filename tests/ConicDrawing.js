@@ -4,6 +4,7 @@ var MersenneTwister = require("mersenne-twister");
 var CindyJS = require("../build/js/Cindy.plain.js");
 var cindyJS = rewire("../build/js/exposed.js");
 
+var csport = cindyJS.__get__("csport");
 var eval_helper = cindyJS.__get__("eval_helper");
 var List = cindyJS.__get__("List");
 var geoOps = cindyJS.__get__("geoOps");
@@ -24,6 +25,14 @@ function LoggingContext() {
  });
 
 
+function fmtMat(mat) {
+    return "[[" + mat.value.map(function(row) {
+        return row.value.map(function(elt) {
+            return elt.value.real;
+        }).join(", ");
+    }).join("],\n     [") + "]];";
+}
+
 function genTestCase(rnd, caseNum, func) {
     log("\n// Case " + caseNum);
     var i, j;
@@ -36,11 +45,13 @@ function genTestCase(rnd, caseNum, func) {
     }
     var mat = geoOps._helper.ConicBy5.apply(null, pts);
     mat = List.normalizeMax(mat);
-    log("M = [[" + mat.value.map(function(row) {
-        return row.value.map(function(elt) {
-            return elt.value.real;
-        }).join(", ");
-    }).join("],\n     [") + "]];");
+    log("M = " + fmtMat(mat));
+    var tmat = csport.toMat();
+    var pmat = List.mult(List.transpose(tmat), mat);
+    pmat = List.mult(pmat, tmat);
+    pmat = List.normalizeMax(pmat);
+    log("N = " + fmtMat(pmat));
+    log();
     func(mat, {}, "D");
 }
 
