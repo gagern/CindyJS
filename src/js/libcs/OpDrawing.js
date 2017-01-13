@@ -303,7 +303,7 @@ eval_helper.drawcircle = function(args, modifs, df) {
         [-xx, -yy, xx * xx + yy * yy - rad * rad]
     ]);
 
-    eval_helper.drawconic(cMat, modifs);
+    eval_helper.drawconic(cMat, modifs, df);
     */
 
     return nada;
@@ -355,7 +355,7 @@ evaluator.drawconic$1 = function(args, modifs) {
         }
 
     }
-    return eval_helper.drawconic(arr, modifs);
+    return eval_helper.drawconic(arr, modifs, "D");
 };
 
 // See also eval_helper.quadratic_roots for the complex case
@@ -374,8 +374,9 @@ function solveRealQuadraticHomog(a, b, c) {
     ];
 }
 
-// Returns either null (if solutions would be complex or NaN)
+// Returns either null (if both solutions would be complex or NaN)
 // or two values x satisfying ax^2 + bx + c = 0
+// Note that if a === 0 then there is only one solution x === -c / b
 function solveRealQuadratic(a, b, c) {
     b *= 0.5;
     var d = b * b - a * c;
@@ -414,10 +415,17 @@ DbgCtx.prototype = {
         this.delegate.lineTo(x, y);
     },
     quadraticCurveTo: function(x1, y1, x, y) {
-        console.log("quadratocCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
+        console.log("quadraticCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
         this.ctls.push([x1, y1]);
         this.pts.push([x, y]);
         this.delegate.quadraticCurveTo(x1, y1, x, y);
+    },
+    bezierCurveTo: function(x1, y1, x2, y2, x, y) {
+        console.log("bezierCurveTo(" + x1 + ", " + y1 + ", " + x2 + ", " + y2 + ", " + x + ", " + y + ")");
+        this.ctls.push([x1, y1]);
+        this.ctls.push([x2, y2]);
+        this.pts.push([x, y]);
+        this.delegate.bezierCurveTo(x1, y1, x2, y2, x, y);
     },
     closePath: function() {
         console.log("closePath()");
@@ -428,9 +436,10 @@ DbgCtx.prototype = {
         this.delegate.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         this.delegate.fill();
     },
-    stroke: function() {
-        console.log("stroke()");
-        this.delegate.stroke();
+    idxText: function(p, i) {
+        this.delegate.fillText(i.toString(), p[0] - (p[0] > 8 ? 5 : -3), p[1] + (p[1] < 10 ? 15 : -5));
+    },
+    info: function() {
         var oldFill = this.delegate.fillStyle;
         this.delegate.fillStyle = "rgb(255,0,255)";
         this.pts.forEach(this.fillCircle, this);
@@ -438,6 +447,7 @@ DbgCtx.prototype = {
         this.ctls.forEach(this.fillCircle, this);
         this.delegate.fillStyle = "rgb(64,0,255)";
         this.special.forEach(this.fillCircle, this);
+        this.special.forEach(this.idxText, this);
         this.delegate.strokeStyle = "rgb(0,255,0)";
         this.lines.forEach(function(line) {
             this.delegate.beginPath();
@@ -448,9 +458,23 @@ DbgCtx.prototype = {
         if (oldFill)
             this.delegate.fillStyle = oldFill;
     },
+    fill: function() {
+        console.log("fill()");
+        this.delegate.fill();
+        this.info();
+    },
+    clip: function() {
+        console.log("clip()");
+        this.delegate.clip();
+    },
+    stroke: function() {
+        console.log("stroke()");
+        this.delegate.stroke();
+        this.info();
+    },
 };
 
-eval_helper.drawconic1 = function(conicMatrix, modifs) {
+eval_helper.drawconic1 = function(conicMatrix, modifs, df) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
@@ -789,7 +813,7 @@ eval_helper.drawconic1 = function(conicMatrix, modifs) {
 
 }; // end eval_helper.drawconic1
 
-eval_helper.drawconic2 = function(conicMatrix, modifs) {
+eval_helper.drawconic2 = function(conicMatrix, modifs, df) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
@@ -1157,10 +1181,6 @@ eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
     var det = c02 * k02 + c11 * k11 + c20 * k20 - c00 * k00;
     if (!isFinite(det)) return;
 
-    // conic center
-    var ccx = k10 / k00;
-    var ccy = k01 / k00;
-
     // Are midpoints of horizontal and vertical intersections inside the conic?
     var hInside = true;
     var vInside = true;
@@ -1171,7 +1191,8 @@ eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
 
     // conic(x, y) === 0 is the equation for the conic. It distinguishes one
     // side of the conic from the other for a given point just like for a line.
-    // conic(ccx, ccy) === det / k00 where k00 is the discriminant
+    // For the conic center, with ccx = k10 / k00 and ccy = k01 / k00,
+    // conic(ccx, ccy) === det / k00 where k00 is the discriminant.
     // When (conic(x, y) < 0) === (det < 0) the point is inside the conic.
     // Note that this distinction is arbitrary for degenerate conics.
     function conic(x, y) {
@@ -1194,12 +1215,10 @@ eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
     var xBottom = solveRealQuadratic( // y = csh
         c20, c11 * csh + c10, (c02 * csh + c01) * csh + c00);
 
-    // For ovals compute the roots of the x and y discriminant for
+    // Compute the roots of the x and y discriminant for
     // the horizontal and vertical tangent points respectively
-    var flats = k00 <= 0 ? [null, null] : [
-        solveRealQuadratic(k00, -2 * k10, k20),
-        solveRealQuadratic(k00, -2 * k01, k02)
-    ];
+    var xFlat = solveRealQuadratic(k00, -2 * k10, k20);
+    var yFlat = solveRealQuadratic(k00, -2 * k01, k02);
 
     var points = [];
 
@@ -1249,19 +1268,17 @@ eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
             if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
                 cleanPush(vert, other, coord, "corner");
         } else {
-            var x, y;
-            var flat = flats[vert ? 0 : 1];
-            if (flat) {
-                flat = flat[other === 0 ? 0 : 1];
+            if (k00 > 0) {
+                var x, y;
                 if (vert) { // xFlat for vertical tangent to oval
-                    x = flat;
+                    x = xFlat[fwd ? 0 : 1];
                     if (0 - eps < x && x < csw + eps) {
                         y = -0.5 * (c11 * x + c01) / c02;
                         if (0 - eps < y && y < csh + eps)
                             points.push(mkp(x, y, "split"));
                     }
                 } else { // !vert => yFlat for horizontal tangent to oval
-                    y = flat;
+                    y = yFlat[fwd ? 1 : 0];
                     if (0 - eps < y && y < csh + eps) {
                         x = -0.5 * (c11 * y + c10) / c20;
                         if (0 - eps < x && x < csw + eps)
@@ -1287,9 +1304,10 @@ eval_helper.drawconic3 = function(conicMatrix, modifs, df) {
     if (n < 2) return; // Nothing to draw
     var j = 0;
     var previousBegin = null;
-    // For hyperbola with its center within the boundaries, setup to
+    // For a hyperbola with any flats within the boundaries, setup to
     // draw arc from "end" to back to previous "begin"
-    if (k00 < 0 && 0 < ccx && ccx < csw && 0 < ccy && ccy < csh) {
+    if (k00 < 0 && !(xFlat && (xFlat[1] < 0 || csw < xFlat[0])) &&
+        !(yFlat && (yFlat[1] < 0 || csh < yFlat[0]))) {
         for (j = 0; j < n; ++j) {
             if (points[j].t === "begin") {
                 previousBegin = points[j];
