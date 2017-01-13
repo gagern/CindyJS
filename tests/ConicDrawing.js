@@ -79,10 +79,13 @@ if (module === require.main) {
         log = function() {};
         var Benchmark = require("benchmark");
         var suite = new Benchmark.Suite();
-        suite.add("drawConics3_a", genTestCases.bind(null, 1024, 123, "drawconic"));
-        suite.add("patch-2_a", genTestCases.bind(null, 1024, 123, "drawconic2"));
-        suite.add("drawConics3_b", genTestCases.bind(null, 1024, 123, "drawconic"));
-        suite.add("patch-2_b", genTestCases.bind(null, 1024, 123, "drawconic2"));
+        ["_a", "_b"].forEach(function(suffix) {
+            [1, 2, 3].forEach(function(funNum) {
+                suite.add(
+                    "drawconic" + funNum + suffix,
+                    genTestCases.bind(null, 1024, 123, "drawconic" + funNum));
+            });
+        });
         suite.on("cycle", function(event) {
             console.log(event.target + " -- " + 1/event.target.hz);
         });
