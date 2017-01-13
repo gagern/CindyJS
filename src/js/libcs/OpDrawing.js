@@ -303,7 +303,7 @@ eval_helper.drawcircle = function(args, modifs, df) {
         [-xx, -yy, xx * xx + yy * yy - rad * rad]
     ]);
 
-    eval_helper.drawconic(cMat, modifs);
+    eval_helper.drawconic(cMat, modifs, df);
     */
 
     return nada;
@@ -355,7 +355,7 @@ evaluator.drawconic$1 = function(args, modifs) {
         }
 
     }
-    return eval_helper.drawconic(arr, modifs);
+    return eval_helper.drawconic(arr, modifs, "D");
 };
 
 // See also eval_helper.quadratic_roots for the complex case
@@ -374,8 +374,9 @@ function solveRealQuadraticHomog(a, b, c) {
     ];
 }
 
-// Returns either null (if solutions would be complex or NaN)
+// Returns either null (if both solutions would be complex or NaN)
 // or two values x satisfying ax^2 + bx + c = 0
+// Note that if a === 0 then there is only one solution x === -c / b
 function solveRealQuadratic(a, b, c) {
     b *= 0.5;
     var d = b * b - a * c;
@@ -414,10 +415,17 @@ DbgCtx.prototype = {
         this.delegate.lineTo(x, y);
     },
     quadraticCurveTo: function(x1, y1, x, y) {
-        console.log("quadratocCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
+        console.log("quadraticCurveTo(" + x1 + ", " + y1 + ", " + x + ", " + y + ")");
         this.ctls.push([x1, y1]);
         this.pts.push([x, y]);
         this.delegate.quadraticCurveTo(x1, y1, x, y);
+    },
+    bezierCurveTo: function(x1, y1, x2, y2, x, y) {
+        console.log("bezierCurveTo(" + x1 + ", " + y1 + ", " + x2 + ", " + y2 + ", " + x + ", " + y + ")");
+        this.ctls.push([x1, y1]);
+        this.ctls.push([x2, y2]);
+        this.pts.push([x, y]);
+        this.delegate.bezierCurveTo(x1, y1, x2, y2, x, y);
     },
     closePath: function() {
         console.log("closePath()");
@@ -428,9 +436,10 @@ DbgCtx.prototype = {
         this.delegate.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         this.delegate.fill();
     },
-    stroke: function() {
-        console.log("stroke()");
-        this.delegate.stroke();
+    idxText: function(p, i) {
+        this.delegate.fillText(i.toString(), p[0] - (p[0] > 8 ? 5 : -3), p[1] + (p[1] < 10 ? 15 : -5));
+    },
+    info: function() {
         var oldFill = this.delegate.fillStyle;
         this.delegate.fillStyle = "rgb(255,0,255)";
         this.pts.forEach(this.fillCircle, this);
@@ -438,6 +447,7 @@ DbgCtx.prototype = {
         this.ctls.forEach(this.fillCircle, this);
         this.delegate.fillStyle = "rgb(64,0,255)";
         this.special.forEach(this.fillCircle, this);
+        this.special.forEach(this.idxText, this);
         this.delegate.strokeStyle = "rgb(0,255,0)";
         this.lines.forEach(function(line) {
             this.delegate.beginPath();
@@ -448,9 +458,23 @@ DbgCtx.prototype = {
         if (oldFill)
             this.delegate.fillStyle = oldFill;
     },
+    fill: function() {
+        console.log("fill()");
+        this.delegate.fill();
+        this.info();
+    },
+    clip: function() {
+        console.log("clip()");
+        this.delegate.clip();
+    },
+    stroke: function() {
+        console.log("stroke()");
+        this.delegate.stroke();
+        this.info();
+    },
 };
 
-eval_helper.drawconic1 = function(conicMatrix, modifs) {
+eval_helper.drawconic1 = function(conicMatrix, modifs, df) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
@@ -789,7 +813,7 @@ eval_helper.drawconic1 = function(conicMatrix, modifs) {
 
 }; // end eval_helper.drawconic1
 
-eval_helper.drawconic2 = function(conicMatrix, modifs) {
+eval_helper.drawconic2 = function(conicMatrix, modifs, df) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
     if (Render2D.lsize === 0)
