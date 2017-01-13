@@ -600,7 +600,7 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
             if ((sol[0] - eps < coord && coord < sol[1] + eps) === smInside)
                 cleanPush(vert, other, coord, "corner");
         } else {
-            if (k00 >= 0) {
+            if (k00 > 0) {
                 var x, y;
                 if (vert) { // xFlat for vertical tangent to oval
                     x = xFlat[fwd ? 0 : 1];
