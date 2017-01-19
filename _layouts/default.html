@@ -95,11 +95,12 @@
         scripts.forEach(function(script) {
           if (!/^text\/(x-)?([lk]a)?tex($|;)/.test(script.type))
             return;
-          var display = false;
+          var display = (/;mode=display($|;)/.test(script.type));
           var elt = document.createElement(display ? "div" : "span");
           try {
-            katex.render(script.text, elt);
+            katex.render(script.text, elt, {displayMode: display});
           } catch (err) {
+            console.error(err);
             elt.textContent = script.text;
           }
           script.parentNode.replaceChild(elt, script);
