@@ -680,3 +680,114 @@ C6.column()
 [1]: http://math.stackexchange.com/q/2098375/35416 "Math SE question"
 [2]: http://math.stackexchange.com/users/268101/oai-thanh-%c4%90%c3%a0o "Math SE user"
 [3]: (http://math.stackexchange.com/a/2103276/35416 "Math SE answer"
+
+## Another figure
+
+A user called [Futurologist](http://math.stackexchange.com/users/357211/futurologist) wrote [a different answer](http://math.stackexchange.com/a/2104720/35416), using a lot less brute-force computation.
+Here is an interactive version of the figure for that proof.
+The crucial new elements are Pascal's line (black) and the orange circles
+<script type="text/x-tex">k_1,k_2,k_3</script>
+with their common radical axis (blue).
+The point <script type="text/x-tex">X</script> is the center of the
+black circle through all the <script type="text/x-tex">A_i</script>,
+while the point <script type="text/x-tex">Y</script> is the center
+of the blue circle through all the <script type="text/x-tex">B_i</script>.
+
+<div id="CSCanvas2"></div>
+<script type="text/javascript">
+var cdy = CindyJS({
+  defaultAppearance: {
+    dimDependent: 0.7,
+    fontFamily: "sans-serif",
+    lineSize: 1,
+    pointSize: 5.0,
+    textsize: 16.0
+  },
+  angleUnit: "°",
+  geometry: [
+    {name: "X", type: "Free", pos: [4.0, 3.3333333333333335, 1.1111111111111112], color: [1.0, 1.0, 1.0], labeled: true, printname: "$X$"},
+    {name: "C0", type: "CircleByRadius", pos: {xx: 0.21551724137931047, yy: 0.21551724137931047, zz: 0.9999999999999999, xy: 0.0, xz: -1.5517241379310351, yz: 1.2931034482758628}, color: [0.0, 0.0, 0.0], radius: 4.161730409336962, args: ["X"], size: 2, printname: "$C_{0}$"},
+    {name: "A1", type: "PointOnCircle", pos: [4.0, {r: 2.9979773064650805, i: -2.216091081599153E-17}, {r: 0.565816758479807, i: -1.3877172180041254E-18}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_1$"},
+    {name: "A2", type: "PointOnCircle", pos: [{r: -1.9371139926172936, i: 3.7039520480468355E-16}, -4.0, {r: -0.5586894510823996, i: -1.6770035156790383E-18}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_2$"},
+    {name: "A3", type: "PointOnCircle", pos: [{r: 0.36500756919720356, i: 8.588893894932418E-17}, -4.0, {r: -0.9513930693995252, i: -5.190473713306478E-17}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_3$"},
+    {name: "A4", type: "PointOnCircle", pos: [{r: 0.7565498830869075, i: -4.4581721790003004E-17}, -4.0, {r: -2.651366389246581, i: -1.5177442784807165E-16}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_4$"},
+    {name: "A5", type: "PointOnCircle", pos: [4.0, {r: -1.4169078321692277, i: 6.666194203215139E-17}, {r: 3.137880675058871, i: 1.6369734764047452E-16}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_5$"},
+    {name: "A6", type: "PointOnCircle", pos: [4.0, {r: -1.1181986211565627, i: -9.174846392258315E-17}, {r: 0.9844415026500165, i: 5.766892811020408E-17}], color: [1.0, 0.0, 0.0], args: ["C0"], labeled: true, printname: "$A_6$"},
+    {name: "a", type: "Join", color: [0.0, 1.0, 0.0], args: ["A2", "A1"]},
+    {name: "b", type: "Join", color: [0.0, 1.0, 0.0], args: ["A4", "A5"]},
+    {name: "O1", type: "Meet", color: [0.0, 0.0, 1.0], args: ["a", "b"], labeled: true, printname: "$O_1$"},
+    {name: "c", type: "Join", color: [0.0, 1.0, 0.0], args: ["A3", "A2"]},
+    {name: "d", type: "Join", color: [0.0, 1.0, 0.0], args: ["A5", "A6"]},
+    {name: "O2", type: "Meet", color: [0.0, 0.0, 1.0], args: ["c", "d"], labeled: true, printname: "$O_2$"},
+    {name: "e", type: "Join", color: [0.0, 1.0, 0.0], args: ["A4", "A3"]},
+    {name: "f", type: "Join", color: [0.0, 1.0, 0.0], args: ["A1", "A6"]},
+    {name: "O3", type: "Meet", color: [0.0, 0.0, 1.0], args: ["e", "f"], labeled: true, printname: "$O_3$"},
+    {name: "pA", type: "Join", color: [0.0, 0.0, 0.0], args: ["O1", "O3"], labeled: true, printname: "$p_A$"},
+    {name: "B", type: "Mid", color: [1.0, 0.0, 0.0], args: ["O1", "X"], visible: false, labeled: true},
+    {name: "M", type: "CircleMP", color: [0.0, 0.0, 1.0], args: ["B", "O1"], visible: false, printname: "$C_{1}$"},
+    {name: "Collection__1", type: "IntersectionCircleCircle", args: ["C0", "M"]},
+    {name: "C", type: "SelectP", pos: [{r: -3.1985880153284008, i: 2.857698967143195E-16}, -4.0, {r: -0.5923721424891585, i: 1.4670132131666345E-17}], color: [1.0, 0.0, 0.0], args: ["Collection__1"], visible: false, labeled: true},
+    {name: "N", type: "CircleMP", color: [1.0, 0.784, 0.0], args: ["O1", "C"], printname: "$C_{2}$"},
+    {name: "D", type: "Mid", color: [1.0, 0.0, 0.0], args: ["O2", "X"], visible: false, labeled: true},
+    {name: "O", type: "CircleMP", color: [0.0, 0.0, 1.0], args: ["D", "O2"], visible: false, printname: "$C_{3}$"},
+    {name: "Collection__2", type: "IntersectionCircleCircle", args: ["C0", "O"]},
+    {name: "E", type: "SelectP", pos: [{r: -0.49021194847839245, i: 1.9629835066768002E-16}, -4.0, {r: -0.6643023424937573, i: -3.49376013809821E-17}], color: [1.0, 0.0, 0.0], args: ["Collection__2"], visible: false, labeled: true},
+    {name: "P", type: "CircleMP", color: [1.0, 0.784, 0.0], args: ["O2", "E"], printname: "$C_{4}$"},
+    {name: "F", type: "Mid", color: [1.0, 0.0, 0.0], args: ["O3", "X"], visible: false, labeled: true},
+    {name: "Q", type: "CircleMP", color: [0.0, 0.0, 1.0], args: ["F", "O3"], visible: false, printname: "$C_{5}$"},
+    {name: "Collection__3", type: "IntersectionCircleCircle", args: ["C0", "Q"]},
+    {name: "G", type: "SelectP", pos: [4.0, {r: 0.37962130508049624, i: -1.2128660300328255E-16}, {r: 0.5675713955955952, i: 1.2434661357476148E-17}], color: [1.0, 0.0, 0.0], args: ["Collection__3"], visible: false, labeled: true},
+    {name: "R", type: "CircleMP", color: [1.0, 0.784, 0.0], args: ["O3", "G"], printname: "$C_{6}$"},
+    {name: "Collection__4", type: "IntersectionCircleCircle", args: ["N", "P"]},
+    {name: "S2", type: "SelectP", pos: [4.0, {r: 3.9507132423810005, i: 1.0009855105049566E-16}, {r: 1.5524316386919041, i: 8.863162704061949E-17}], color: [0.0, 1.0, 1.0], args: ["Collection__4"], labeled: true, printname: "$S^*$"},
+    {name: "S1", type: "SelectP", pos: [4.0, {r: 1.2475145253701303, i: -2.9754034164092666E-17}, {r: -0.37989085263629224, i: -7.896830430925893E-17}], color: [0.0, 1.0, 1.0], args: ["Collection__4"], labeled: true, printname: "$S$"},
+    {name: "h", type: "Join", color: [0.0, 0.0, 1.0], args: ["S1", "S2"]},
+    {name: "Y", type: "PointOnLine", pos: [4.0, {r: 2.740916928465185, i: -7.174216557313194E-17}, {r: 0.6876351986098125, i: -6.767112818397388E-17}], color: [1.0, 1.0, 1.0], args: ["h"], labeled: true, printname: "$Y$"},
+    {name: "K", type: "Mid", color: [1.0, 0.0, 0.0], args: ["O1", "Y"], visible: false, labeled: true},
+    {name: "C7", type: "CircleMP", color: [0.0, 0.0, 1.0], args: ["K", "Y"], visible: false, printname: "$C_{7}$"},
+    {name: "Collection__5", type: "IntersectionCircleCircle", args: ["N", "C7"]},
+    {name: "L", type: "SelectP", pos: [{r: -2.3443456028689447, i: 5.045931625154216E-16}, -4.0, {r: -0.33700090771156577, i: 2.951823786075992E-17}], color: [1.0, 0.0, 0.0], args: ["Collection__5"], visible: false, labeled: true},
+    {name: "C8", type: "CircleMP", color: [0.0, 0.0, 1.0], args: ["Y", "L"], size: 2, printname: "$C_{8}$"},
+    {name: "B1", type: "PointOnCircle", pos: [4.0, {r: -1.3496628024111754, i: -1.0470628205026952E-16}, {r: 0.4279117724465014, i: -1.9113960338618522E-17}], color: [1.0, 1.0, 0.0], args: ["C8"], labeled: true, printname: "$B_1$"},
+    {name: "C9", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B1", "A2", "A1"], printname: "$C_{9}$"},
+    {name: "C10", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B1", "A4", "A5"], printname: "$C_{10}$"},
+    {name: "B4", type: "OtherIntersectionCC", color: [1.0, 1.0, 0.0], args: ["C8", "C9", "B1"], labeled: true, printname: "$B_4$"},
+    {name: "B2", type: "PointOnCircle", pos: [4.0, {r: 1.127921685888195, i: -7.663681081883366E-17}, {r: 0.29023922753554043, i: -2.326160844260913E-17}], color: [1.0, 1.0, 0.0], args: ["C8"], labeled: true, printname: "$B_2$"},
+    {name: "C11", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B2", "A2", "A3"], printname: "$C_{11}$"},
+    {name: "C12", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B2", "A6", "A5"], printname: "$C_{12}$"},
+    {name: "B5", type: "OtherIntersectionCC", color: [1.0, 1.0, 0.0], args: ["C8", "C11", "B2"], labeled: true, printname: "$B_5$"},
+    {name: "B3", type: "PointOnCircle", pos: [{r: -1.4349446599749198, i: 6.954688763253215E-17}, -4.0, {r: -0.33922338067387836, i: 2.0973473174385573E-17}], color: [1.0, 1.0, 0.0], args: ["C8"], labeled: true, printname: "$B_3$"},
+    {name: "C13", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B3", "A3", "A4"], printname: "$C_{13}$"},
+    {name: "C14", type: "CircleBy3", color: [0.467, 0.0, 0.718], args: ["B3", "A6", "A1"], printname: "$C_{14}$"},
+    {name: "B6", type: "OtherIntersectionCC", color: [1.0, 1.0, 0.0], args: ["C8", "C13", "B3"], labeled: true, printname: "$B_6$"},
+    {name: "C1", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C9", "C14", "A1"], labeled: true, printname: "$C_1$"},
+    {name: "C2", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C9", "C11", "A2"], labeled: true, printname: "$C_2$"},
+    {name: "C3", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C11", "C13", "A3"], labeled: true, printname: "$C_3$"},
+    {name: "C4", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C10", "C13", "A4"], labeled: true, printname: "$C_4$"},
+    {name: "C5", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C10", "C12", "A5"], labeled: true, printname: "$C_5$"},
+    {name: "C6", type: "OtherIntersectionCC", color: [0.0, 1.0, 0.0], args: ["C12", "C14", "A6"], labeled: true, printname: "$C_6$"},
+    {name: "C15", type: "CircleBy3", color: [1.0, 0.0, 0.0], args: ["C1", "C2", "C3"], size: 2, printname: "$C_{15}$"}
+  ],
+  ports: [{
+    id: "CSCanvas2",
+    width: 620,
+    height: 543,
+    transform: [{visibleRect: [-12.425817883647227, 19.14212149353852, 21.056560994419957, -10.181961943220319]}],
+    background: "rgb(255,255,255)"
+  }],
+  csconsole: false,
+  use: ["katex"],
+  cinderella: {build: 1892, version: [2, 9, 1892]}
+});
+</script>
+
+You can drag both of these around, and also drag the
+<script type="text/x-tex">A_i</script> and
+<script type="text/x-tex">B_1,B_2,B_3</script>.
+The radius of the black circle can be modified, too.
+So there are 13 real degrees of freedom in this construction.
+My computation above used 9 variable parameters,
+but it also fixed the positions of three points
+(amounting to 6 real degrees of freedom)
+while at the same time imposing two extra conditions
+(removing two real degrees of freedom).
