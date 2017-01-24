@@ -58,14 +58,18 @@ function drawgeoconic(el) {
     if (!el.isshowing || el.visible === false)
         return;
 
-    var modifs = {};
-    modifs.color = el.color;
-    modifs.alpha = el.alpha;
-    modifs.size = el.size;
+    var modifs = {
+        color: el.color,
+        alpha: el.alpha,
+        fillcolor: el.fillcolor,
+        fillalpha: el.fillalpha,
+        size: el.size,
+    };
 
-    eval_helper.drawconic(el.matrix, modifs, "D");
+    // check if we have filled: true
+    var df = el.filled ? "F" : "D";
 
-
+    eval_helper.drawconic(el.matrix, modifs, df);
 }
 
 function drawgeoline(el) {
