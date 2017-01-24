@@ -477,7 +477,7 @@ DbgCtx.prototype = {
 eval_helper.drawconic = function(conicMatrix, modifs, df) {
     //var csctx = new DbgCtx();
     Render2D.handleModifs(modifs, Render2D.conicModifs);
-    if (Render2D.lsize === 0 && df === "D")
+    if (Render2D.lsize === 0 && df === "D" && !Render2D.fillColor)
         return;
     Render2D.preDrawCurve();
 
@@ -648,51 +648,61 @@ eval_helper.drawconic = function(conicMatrix, modifs, df) {
         }
     }
     var previous = points[j > 0 ? j - 1 : n - 1];
-    csctx.beginPath();
-    if (!previousBegin) csctx.moveTo(previous.x, previous.y);
-    // Draw segments along the boundary edge from begin->(corner*)->end
-    // and arcs from end->(split*)->begin
     var i;
     var next;
-    for (i = 0; i < n; ++i, ++j) {
-        if (j >= n) j -= n; // Wrap-around
-        next = points[j];
-        switch (next.t) {
-            case "begin":
-                if (previousBegin) {
-                    previousBegin = next;
-                    csctx.moveTo(next.x, next.y);
-                } else drawArc(previous, next);
-                break;
-            case "corner":
-                if (df !== "D") csctx.lineTo(next.x, next.y);
-                break;
-            case "end":
-                if (df !== "D") csctx.lineTo(next.x, next.y);
-                else csctx.moveTo(next.x, next.y);
-                if (previousBegin) drawArc(next, previousBegin);
-                break;
-            case "split":
-                drawArc(previous, next);
-                break;
+    var includeEdges = df !== "D" || Render2D.fillColor;
+    while (true) { // Repeated to exclude edges for curve when also filling
+        csctx.beginPath();
+        if (!previousBegin) csctx.moveTo(previous.x, previous.y);
+        // Draw segments along the boundary edge from begin->(corner*)->end
+        // and arcs from end->(split*)->begin
+        for (i = 0; i < n; ++i, ++j) {
+            if (j >= n) j -= n; // Wrap-around
+            next = points[j];
+            switch (next.t) {
+                case "begin":
+                    if (previousBegin) {
+                        previousBegin = next;
+                        csctx.moveTo(next.x, next.y);
+                    } else drawArc(previous, next);
+                    break;
+                case "corner":
+                    if (includeEdges) csctx.lineTo(next.x, next.y);
+                    break;
+                case "end":
+                    if (includeEdges) csctx.lineTo(next.x, next.y);
+                    else csctx.moveTo(next.x, next.y);
+                    if (previousBegin) drawArc(next, previousBegin);
+                    break;
+                case "split":
+                    drawArc(previous, next);
+                    break;
+            }
+            previous = next;
         }
-        previous = next;
-    }
-
-    if (csctx.special) { // begin DEBUG code
-        for (i = 0; i < points.length; ++i)
-            csctx.special.push([points[i].x, points[i].y]);
-    } // end DEBUG code
-
-    if (df === "D") {
-        csctx.stroke();
-    }
-    if (df === "F") {
-        csctx.fillStyle = Render2D.lineColor;
-        csctx.fill();
-    }
-    if (df === "C") {
-        csctx.clip();
+        if (df === "D") {
+            if (includeEdges) {
+                csctx.fillStyle = Render2D.fillColor;
+                csctx.fill();
+                if (Render2D.lsize === 0) break;
+                // Redo path leaving out boundary edge segments
+                includeEdges = false;
+                continue;
+            }
+            if (csctx.special) { // begin DEBUG code
+                for (i = 0; i < points.length; ++i)
+                    csctx.special.push([points[i].x, points[i].y]);
+            } // end DEBUG code
+            csctx.stroke();
+        }
+        if (df === "F") {
+            csctx.fillStyle = Render2D.lineColor;
+            csctx.fill();
+        }
+        if (df === "C") {
+            csctx.clip();
+        }
+        break;
     }
 
     function drawArc(pt1, pt2) {
@@ -847,7 +857,7 @@ eval_helper.drawpolygon = function(args, modifs, df, cycle) {
             csctx.fillStyle = Render2D.fillColor;
             csctx.fill();
         }
-        csctx.stroke();
+        if (Render2D.lsize !== 0) csctx.stroke();
     }
     if (df === "F") {
         csctx.fillStyle = Render2D.lineColor;

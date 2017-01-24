@@ -136,7 +136,17 @@ function textDefault(el) {
 }
 
 function polygonDefault(el) {
-    el.filled = (el.filled !== undefined ? General.bool(el.filled) : General.bool(true));
+    el.filled = el.filled !== undefined ? el.filled : true;
+    if (el.fillcolor === undefined) el.fillcolor = nada;
+    else el.fillcolor = List.realVector(el.fillcolor);
+    if (el.fillalpha === undefined) el.fillalpha = 0;
+    el.fillalpha = CSNumber.real(el.fillalpha);
+
+    lineDefault(el);
+}
+
+function conicDefault(el) {
+    el.filled = el.filled !== undefined ? el.filled : false;
     if (el.fillcolor === undefined) el.fillcolor = nada;
     else el.fillcolor = List.realVector(el.fillcolor);
     if (el.fillalpha === undefined) el.fillalpha = 0;
@@ -271,7 +281,7 @@ function addElementNoProof(el) {
     }
     if (el.kind === "C") {
         csgeo.conics.push(el);
-        lineDefault(el);
+        conicDefault(el);
     }
     if (el.kind === "S") {
         csgeo.lines.push(el);
