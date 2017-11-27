@@ -11,19 +11,15 @@ ruby RUBY_VERSION
 # Happy Jekylling!
 #gem "jekyll", "3.2.1"
 
-# This is the default theme for new Jekyll sites. You may change this to anything you like.
+# Theme
 gem "minima"
 
 # If you want to use GitHub Pages, remove the "gem "jekyll"" above and
 # uncomment the line below. To upgrade, run `bundle update github-pages`.
-# gem "github-pages", group: :jekyll_plugins
+gem "github-pages", group: :jekyll_plugins
 
-# From https://raw.githubusercontent.com/jekyll/jekyll/master/site/_docs/github-pages.md
-require 'json'
-require 'open-uri'
-versions = JSON.parse(open('https://pages.github.com/versions.json').read)
-
-gem 'github-pages', versions['github-pages'], group: :jekyll_plugins
+# Version from https://pages.github.com/versions/, missing from github-pages
+gem "sass", "3.5.3"
 
 # If you have any plugins, put them here!
 # group :jekyll_plugins do
