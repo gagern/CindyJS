@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Limit case of Miquel theorem"
+title:  "Limit case of Miquel's theorem"
 date:   2017-11-17 10:30 +0000
 categories: se math
 cjs:
@@ -13,7 +13,7 @@ for a proof which according to [my answer][3] can be seen as a special case of
 [Miquel's six circle theorem][4].
 As the point <script type="text/x-tex">D</script> is moved
 towards <script type="text/x-tex">A</script>,
-As the point <script type="text/x-tex">D_1</script> moves
+the point <script type="text/x-tex">D_1</script> moves
 towards <script type="text/x-tex">A_1</script>.
 In the limit, when <script type="text/x-tex">D</script>
 and <script type="text/x-tex">A</script> coincide,
