@@ -69,30 +69,36 @@ Optimality depends on an assumed probability distribution for the initial state.
 One such assumption could be that all <script type="text/x-tex">2^n-1</script>
 non-winning states are equally probable.
 
+So let's take three switches as an example, and assume all seven
+possible initial states are equally likely.
+
 ## Optimal strategy for three switches
 
 <img src="{{ "/images/switches3a.svg" | prepend: post_full_base_url }}" alt="Optimal strategy graph" type="image/svg" style="width: 100%">
 
-The infinite strategies shown above all lead to a minimal expected number of
-actions, namely
+The infinite strategies shown in the above graph all lead to a minimal
+expected number of actions, namely
 
 <script type="text/x-tex;mode=display">E[a]=\frac{40}{7}\approx5.7</script>
 
+In the following sections I'll explain where this figure is coming from.
+
 ## Modeling three switches
 
-So let's take three switches as an example. If the initial probability
-distribution is known (or assumed), then the probability at any point can be
+If the initial probability distribution is known (or assumed), then
+the probability distribution after a given sequence of actions can be
 expressed as a vector
 
 <script type="text/x-tex;mode=display">
   p = \begin{pmatrix}p_{000}\\p_{001}\\p_{011}\\p_{111}\end{pmatrix}
 </script>
 
-This is again considering switch states as equivalent if theuy only differ
-by rotation. The individual properties add up to one.
-The last component indicates the probability that we already solved the door
-by that state (so we probably assume this to be zero up front).
-Assuming that all seven non-winning states are equally probable, we get
+This is considering switch states as equivalent if they only differ by
+rotation, similar to the power of two case I discussed before.
+The individual properties add up to one. The last component indicates
+the probability that we already solved the door by that state (so we
+probably assume this to be zero up front). Assuming that all seven
+non-winning states are equally probable, we get
 
 <script type="text/x-tex;mode=display">
   p_0 = \frac17\begin{pmatrix}1\\3\\3\\0\end{pmatrix}
@@ -123,15 +129,15 @@ We can model the actions as matrix multiplications.
   \end{pmatrix}\quad
 </script>
 
-You can read each matrix by column to figure out what a given pattern will
-transform to: if you are in pattern <script type="text/x-tex">001</script>
+You can read each matrix by column to figure out what a given state will
+transform to: if you are in state <script type="text/x-tex">001</script>
 (i.e. one button is on and two are off) and press one button,
 then the second column of <script type="text/x-tex">A_{001}</script>
 tells you that with probability <script type="text/x-tex">\frac13</script>
 you end up in state <script type="text/x-tex">000</script> but with probability
 <script type="text/x-tex">\frac23</script> you get to
 <script type="text/x-tex">011</script>.
-You can also read the matrix by row to figure out where a given pattern
+You can also read the matrix by row to figure out where a given state
 could come from. If after pressing one button you end up in state
 <script type="text/x-tex">001</script>, then this will happen all the time
 (probability <script type="text/x-tex">\frac33</script>) if the previous
@@ -145,7 +151,7 @@ bottom right entry ensures you never leave the winning state after reaching it.
 
 How do you compute the expected number of actions needed for a given
 probability distribution? This is linear, so you can sum expected wait
-times weighted by probability:
+times for a single state weighted by probability of that state:
 
 <script type="text/x-tex;mode=display">
   E[a] = t\cdot p = \left(t_{000}, t_{001}, t_{011}, 0\right)\cdot
@@ -155,8 +161,8 @@ times weighted by probability:
 
 The expected number of actions <script type="text/x-tex">E[a]</script>
 is the product with a row vector <script type="text/x-tex">t</script>
-of expected times for each pattern times a column vector
-<script type="text/x-tex">p</script> of the probability of that pattern.
+of expected times for each state times a column vector
+<script type="text/x-tex">p</script> of the probability of that state.
 The expected time if you already are in the winning state is always zero
 so I did not include an entry <script type="text/x-tex">t_{111}</script>.
 
@@ -184,7 +190,7 @@ not on the right as you may be more familiar with.
 For a strategy of always pressing one button we find
 <script type="text/x-tex">t = \left(10, 9, 7\right)</script>
 so you can expect to need 10 actions if you happened to start in
-the all-off pattern, 9 if one switch was on when you started,
+the all-off state, 9 if one switch was on when you started,
 and 7 if two were on already.
 
 ## Strategies repeating different actions
@@ -230,7 +236,7 @@ a difference depending on the distribution you start in
 they make no difference when applied to the assumed initial distribution
 <script type="text/x-tex">p_0</script>.
 
-## Different paths leading to the same state
+## Different paths leading to the same distribution
 
 The above computation can show that the expected number of actions is
 the claimed value of <script type="text/x-tex">\frac{40}7</script> for some of
@@ -252,7 +258,7 @@ of still being stuck are
 
 For the infinite number of options in the lower path of the graph,
 we can show that as long as the <script type="text/x-tex">001</script>
-pattern and the <script type="text/x-tex">011</script> state are
+state and the <script type="text/x-tex">011</script> state are
 equally likely, the choice between <script type="text/x-tex">A_{001}</script>
 and <script type="text/x-tex">A_{011}</script> doesn't make a difference:
 
@@ -268,11 +274,15 @@ and <script type="text/x-tex">A_{011}</script> doesn't make a difference:
 
 Standard graph-searching algorithms such as
 [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
-can be used to find strategies that in each state minimize the expected
-number of actions up to that node, i.e. assuming zero waits after this.
-Such an algorithm will never over-estimate the cost of a given strategy,
-but it may under-estimate the cost if the steps needed for the remaining
-(infinite) path are still too high.
+
+can be used to find strategies that for each achievable probability
+distribution minimize the expected number of actions up to that node.
+Counting actions up to that node is effectively assuming zero waits
+after this. Such an algorithm will never over-estimate the cost of a
+given strategy, but it may under-estimate the cost if the steps needed
+for the remaining (infinite) path are still too high. Cost here is the
+probability of needing another step (i.e. not having won yet) summed
+for all the path to a given node.
 
 Knowing that a cost of <script type="text/x-tex">E[a]=\frac{40}7</script>
 is achievable allows the algorithm to disregard any nodes with a higher cost
@@ -281,10 +291,11 @@ goal-oriented. Such a run did find that up to a depth of over 20 actions,
 all paths still under consideration were following the pattern shown in
 the above graph diagram.
 
-Strictly speaking this is no proof that there can't be an even better strategy,
-which looks like those above (so it is still derived from one of the paths
-still under consideration) but then deviates from that after some number of
-actions to reach an even lower total cost.
+Strictly speaking this is no proof that there can't be an even better
+strategy, which looks like those above in the beginning (so it is
+still derived from one of the paths still under consideration) but
+then deviates from that after some number of actions to reach an even
+lower total cost.
 
 I consider this very unlikely, but as I said, that is not a proof.
 
